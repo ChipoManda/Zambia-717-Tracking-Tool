@@ -345,72 +345,213 @@ input,select,textarea{font-family:inherit}
   <div class="card"><div class="ct"><div class="ct-dot" style="background:var(--amber)"></div>Remedial action status</div><div class="ch-wrap" style="height:200px"><canvas id="ch-act-live" role="img" aria-label="Action status donut chart">Action chart.</canvas></div></div>
 </main>
 
-<!-- ══ PAGE: ENTER / EDIT EVENT ════════════════════════════════════ -->
+<!-- ══ PAGE: ENTER / EDIT EVENT ════════════════════════════════ -->
 <main class="pg" id="pg-entry">
   <div class="ph">
-    <div><div class="ptitle" id="entry-h">New outbreak event</div><div class="psub">WHO 7-1-7 consolidation sheet — Sheet 1</div></div>
+    <div><div class="ptitle" id="entry-h">New outbreak event</div><div class="psub">WHO 7-1-7 consolidation sheet — mirrors the Excel structure exactly</div></div>
     <div class="btns"><button class="btn sm" onclick="clearForm()">Clear</button><button class="btn sm p" onclick="submitForm()">&#10003; Save event</button></div>
   </div>
 
-  <!-- Banner only shown to User role -->
   <div class="user-banner" id="user-banner" style="display:none">
     <div class="user-banner-icon"><svg viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 3c1.93 0 3.5 1.57 3.5 3.5S13.93 13 12 13s-3.5-1.57-3.5-3.5S10.07 6 12 6zm7 13H5v-.23c0-.62.28-1.2.76-1.58C7.47 15.82 9.64 15 12 15s4.53.82 6.24 2.19c.48.38.76.97.76 1.58V19z"/></svg></div>
-    <div><div class="user-banner-title">Data Entry Portal</div><div class="user-banner-sub">Enter outbreak event details below. All fields are saved locally and visible to admins.</div></div>
+    <div><div class="user-banner-title">Data Entry Portal</div><div class="user-banner-sub">Enter outbreak event details below. All fields are saved locally and synced to the server.</div></div>
   </div>
 
   <div class="card">
     <div class="fgrid">
+
+      <!-- ── EVENT INFORMATION ───────────────────────────────── -->
       <div class="fsec"><div class="fsec-dot" style="background:var(--steel)"></div>Event information</div>
-      <div class="fg"><label>Event name *</label><input id="f-name" placeholder="e.g. Anthrax, Cholera, Mpox…" required></div>
-      <div class="fg"><label>Event type</label><select id="f-type"><option value="">— select —</option><option>Endemic disease</option><option>Animal disease</option><option>Non-endemic disease</option><option>Other health threat</option></select></div>
-      <div class="fg"><label>Province / Region *</label><input id="f-prov" placeholder="e.g. Southern" required></div>
-      <div class="fg"><label>District</label><input id="f-dist" placeholder="e.g. Sinazongwe"></div>
-      <div class="fg"><label>City / Community</label><input id="f-city"></div>
+      <div class="fg">
+        <label>Event name *</label>
+        <div style="font-size:10px;color:var(--tx3);margin-bottom:3px">Name of endemic disease, animal disease, non-endemic disease or other health threat</div>
+        <input id="f-name" placeholder="e.g. Anthrax, Cholera, Mpox…" required>
+      </div>
+      <div class="fg">
+        <label>Event type</label>
+        <select id="f-type">
+          <option value="">— select —</option>
+          <option>Endemic disease</option>
+          <option>Animal disease</option>
+          <option>Non-endemic disease</option>
+          <option>Other health threat</option>
+        </select>
+      </div>
+      <div class="fg">
+        <label>Province *</label>
+        <div style="font-size:10px;color:var(--tx3);margin-bottom:3px">Select province</div>
+        <select id="f-prov" required onchange="onProvChange()">
+          <option value="">— select province —</option>
+          <option value="Central">Central</option>
+          <option value="Copperbelt">Copperbelt</option>
+          <option value="Eastern">Eastern</option>
+          <option value="Luapula">Luapula</option>
+          <option value="Lusaka">Lusaka</option>
+          <option value="Muchinga">Muchinga</option>
+          <option value="North-Western">North-Western</option>
+          <option value="Northern">Northern</option>
+          <option value="Southern">Southern</option>
+          <option value="Western">Western</option>
+        </select>
+      </div>
+      <div class="fg">
+        <label>District</label>
+        <div style="font-size:10px;color:var(--tx3);margin-bottom:3px">Districts load after selecting a province</div>
+        <select id="f-dist">
+          <option value="">— select province first —</option>
+        </select>
+      </div>
+      <div class="fg">
+        <label>City / District (optional)</label>
+        <div style="font-size:10px;color:var(--tx3);margin-bottom:3px">Lower level of governance (e.g. city or district)</div>
+        <input id="f-city" placeholder="e.g. Dengeza">
+      </div>
 
+      <!-- ── EMERGENCE ────────────────────────────────────────── -->
       <div class="fsec"><div class="fsec-dot" style="background:#9FE1CB"></div>Emergence</div>
-      <div class="fg"><label>Date of emergence</label><input type="date" id="f-emerge" oninput="liveCalc()"></div>
-      <div class="fg full"><label>Narrative</label><textarea id="f-emerge-n" placeholder="Rationale for emergence date…"></textarea></div>
+      <div class="fg">
+        <label>Date of emergence</label>
+        <div style="font-size:10px;color:var(--tx3);margin-bottom:3px">See definition. Leave blank if pending/missing.</div>
+        <input type="date" id="f-emerge" oninput="liveCalc()">
+      </div>
+      <div class="fg full">
+        <label>Narrative — emergence</label>
+        <div style="font-size:10px;color:var(--tx3);margin-bottom:3px">Rationale for identifying this date for effective response and any key observations.</div>
+        <textarea id="f-emerge-n" placeholder="Briefly describe…"></textarea>
+      </div>
 
+      <!-- ── DETECTION ────────────────────────────────────────── -->
       <div class="fsec"><div class="fsec-dot" style="background:#9E86DC"></div>Detection — target ≤ 7 days from emergence</div>
-      <div class="fg"><label>Date of detection *</label><input type="date" id="f-detect" required oninput="liveCalc()"></div>
-      <div class="fg full"><label>Narrative</label><textarea id="f-detect-n"></textarea></div>
-      <div class="fg"><label>Bottleneck 1</label><input id="f-db1" placeholder="e.g. Low clinical suspicion"></div>
-      <div class="fg"><label>Bottleneck 2</label><input id="f-db2"></div>
-      <div class="fg"><label>Bottleneck 3</label><input id="f-db3"></div>
-      <div class="fg"><label>Enablers</label><input id="f-den"></div>
+      <div class="fg">
+        <label>Date of detection *</label>
+        <div style="font-size:10px;color:var(--tx3);margin-bottom:3px">Date the event is first recorded by any source or in any system.</div>
+        <input type="date" id="f-detect" required oninput="liveCalc()">
+      </div>
+      <div class="fg full">
+        <label>Narrative — detection</label>
+        <div style="font-size:10px;color:var(--tx3);margin-bottom:3px">Rationale for identifying this date for effective response and any key observations.</div>
+        <textarea id="f-detect-n"></textarea>
+      </div>
+      <div class="fg"><label>Detection — Bottleneck 1</label><div style="font-size:10px;color:var(--tx3);margin-bottom:3px">Factors that prevented timely action.</div><input id="f-db1" placeholder="Bottleneck 1"></div>
+      <div class="fg"><label>Detection — Bottleneck 2</label><input id="f-db2" placeholder="Bottleneck 2"></div>
+      <div class="fg"><label>Detection — Bottleneck 3</label><input id="f-db3" placeholder="Bottleneck 3"></div>
+      <div class="fg full">
+        <label>Detection — Enablers</label>
+        <div style="font-size:10px;color:var(--tx3);margin-bottom:3px">Factors that enabled timely action. Document for advocacy and to demonstrate impact.</div>
+        <input id="f-den" placeholder="Briefly describe enablers…">
+      </div>
 
+      <!-- ── NOTIFICATION ─────────────────────────────────────── -->
       <div class="fsec"><div class="fsec-dot" style="background:var(--berry)"></div>Notification — target ≤ 1 day from detection</div>
-      <div class="fg"><label>Date of notification *</label><input type="date" id="f-notify" required oninput="liveCalc()"></div>
-      <div class="fg full"><label>Narrative</label><textarea id="f-notify-n"></textarea></div>
-      <div class="fg"><label>Bottleneck 1</label><input id="f-nb1"></div>
-      <div class="fg"><label>Bottleneck 2</label><input id="f-nb2"></div>
-      <div class="fg"><label>Bottleneck 3</label><input id="f-nb3"></div>
-      <div class="fg"><label>Enablers</label><input id="f-nen"></div>
+      <div class="fg">
+        <label>Date of notification *</label>
+        <div style="font-size:10px;color:var(--tx3);margin-bottom:3px">Date the event is first reported to a public health authority responsible for action.</div>
+        <input type="date" id="f-notify" required oninput="liveCalc()">
+      </div>
+      <div class="fg full">
+        <label>Narrative — notification</label>
+        <div style="font-size:10px;color:var(--tx3);margin-bottom:3px">Rationale for identifying this date for effective response and any key observations.</div>
+        <textarea id="f-notify-n"></textarea>
+      </div>
+      <div class="fg"><label>Notification — Bottleneck 1</label><input id="f-nb1" placeholder="Bottleneck 1"></div>
+      <div class="fg"><label>Notification — Bottleneck 2</label><input id="f-nb2" placeholder="Bottleneck 2"></div>
+      <div class="fg"><label>Notification — Bottleneck 3</label><input id="f-nb3" placeholder="Bottleneck 3"></div>
+      <div class="fg full">
+        <label>Notification — Enablers</label>
+        <div style="font-size:10px;color:var(--tx3);margin-bottom:3px">Factors that enabled timely action.</div>
+        <input id="f-nen" placeholder="Briefly describe enablers…">
+      </div>
 
-      <div class="fsec"><div class="fsec-dot" style="background:var(--amber)"></div>Response — 7 early actions (within 7 days of notification)</div>
-      <div class="fg"><label>RA1 — Initiate investigation / deploy response team</label><input type="date" id="f-ra1" oninput="liveCalc()"></div>
-      <div class="fg"><label>RA2 — Epidemiologic analysis &amp; risk assessment</label><input type="date" id="f-ra2" oninput="liveCalc()"></div>
-      <div class="fg"><label>RA3 — Laboratory confirmation</label><input type="date" id="f-ra3" oninput="liveCalc()"></div>
-      <div class="fg"><label>RA4 — Case management &amp; IPC</label><input type="date" id="f-ra4" oninput="liveCalc()"></div>
-      <div class="fg"><label>RA5 — Public health countermeasures</label><input type="date" id="f-ra5" oninput="liveCalc()"></div>
-      <div class="fg"><label>RA6 — Risk communication &amp; RCCE</label><input type="date" id="f-ra6" oninput="liveCalc()"></div>
-      <div class="fg"><label>RA7 — Coordination mechanism</label><input type="date" id="f-ra7" oninput="liveCalc()"></div>
-      <div class="fg full"><label>Response narrative</label><textarea id="f-rn"></textarea></div>
-      <div class="fg"><label>Bottleneck 1</label><input id="f-rb1"></div>
-      <div class="fg"><label>Bottleneck 2</label><input id="f-rb2"></div>
-      <div class="fg"><label>Bottleneck 3</label><input id="f-rb3"></div>
-      <div class="fg"><label>Enablers</label><input id="f-ren"></div>
+      <!-- ── RESPONSE ─────────────────────────────────────────── -->
+      <div class="fsec"><div class="fsec-dot" style="background:var(--amber)"></div>Response — 7 early response actions (target: all within 7 days of notification)</div>
+      <div class="fg">
+        <label>RA1 — Initiate investigation / deploy response team</label>
+        <div style="font-size:10px;color:var(--tx3);margin-bottom:3px">Enter date. Enter NA if not applicable. Leave blank if pending/missing.</div>
+        <input type="date" id="f-ra1" oninput="liveCalc()">
+      </div>
+      <div class="fg">
+        <label>RA2 — Epidemiologic analysis &amp; initial risk assessment</label>
+        <div style="font-size:10px;color:var(--tx3);margin-bottom:3px">Enter date or NA if not applicable.</div>
+        <input type="date" id="f-ra2" oninput="liveCalc()">
+      </div>
+      <div class="fg">
+        <label>RA3 — Laboratory confirmation of outbreak etiology</label>
+        <input type="date" id="f-ra3" oninput="liveCalc()">
+      </div>
+      <div class="fg">
+        <label>RA4 — Case management &amp; IPC in health facilities</label>
+        <input type="date" id="f-ra4" oninput="liveCalc()">
+      </div>
+      <div class="fg">
+        <label>RA5 — Public health countermeasures in communities</label>
+        <input type="date" id="f-ra5" oninput="liveCalc()">
+      </div>
+      <div class="fg">
+        <label>RA6 — Risk communication &amp; community engagement (RCCE)</label>
+        <input type="date" id="f-ra6" oninput="liveCalc()">
+      </div>
+      <div class="fg">
+        <label>RA7 — Establish a coordination mechanism</label>
+        <input type="date" id="f-ra7" oninput="liveCalc()">
+      </div>
 
+      <!-- Auto-calculated response dates (read-only display) -->
+      <div class="fg">
+        <label>Date of early response initiation <span style="font-weight:400;color:var(--green)">(auto)</span></label>
+        <div style="font-size:10px;color:var(--tx3);margin-bottom:3px">Earliest of the 7 RA dates — auto-calculated.</div>
+        <input id="f-ri-display" readonly placeholder="Auto from RA1–RA7" style="background:var(--surf2);color:var(--green);font-weight:600">
+      </div>
+      <div class="fg">
+        <label>Date of early response completion <span style="font-weight:400;color:var(--green)">(auto)</span></label>
+        <div style="font-size:10px;color:var(--tx3);margin-bottom:3px">Latest of the 7 RA dates. Incomplete if any cells left blank.</div>
+        <input id="f-rc-display" readonly placeholder="Auto from RA1–RA7" style="background:var(--surf2);color:var(--green);font-weight:600">
+      </div>
+
+      <div class="fg full">
+        <label>Narrative — response</label>
+        <div style="font-size:10px;color:var(--tx3);margin-bottom:3px">Rationale for identifying these dates for effective response and any key observations.</div>
+        <textarea id="f-rn"></textarea>
+      </div>
+      <div class="fg"><label>Response — Bottleneck 1</label><input id="f-rb1" placeholder="Bottleneck 1"></div>
+      <div class="fg"><label>Response — Bottleneck 2</label><input id="f-rb2" placeholder="Bottleneck 2"></div>
+      <div class="fg"><label>Response — Bottleneck 3</label><input id="f-rb3" placeholder="Bottleneck 3"></div>
+      <div class="fg full">
+        <label>Response — Enablers</label>
+        <div style="font-size:10px;color:var(--tx3);margin-bottom:3px">Factors that enabled timely action.</div>
+        <input id="f-ren" placeholder="Briefly describe enablers…">
+      </div>
+
+      <!-- ── CLOSING ───────────────────────────────────────────── -->
       <div class="fsec"><div class="fsec-dot" style="background:var(--steel)"></div>Closing</div>
-      <div class="fg"><label>Outbreak end date</label><input type="date" id="f-end"></div>
-      <div class="fg full"><label>Observations / notes</label><textarea id="f-notes"></textarea></div>
-    </div>
+      <div class="fg">
+        <label>End date</label>
+        <div style="font-size:10px;color:var(--tx3);margin-bottom:3px">Date the outbreak is declared over by responsible authorities.</div>
+        <input type="date" id="f-end">
+      </div>
+      <div class="fg full">
+        <label>Observations / notes</label>
+        <div style="font-size:10px;color:var(--tx3);margin-bottom:3px">Observations or rationale for data input.</div>
+        <textarea id="f-notes" placeholder="Any additional observations…"></textarea>
+      </div>
+      <div class="fg">
+        <label>Date EAR presentation done</label>
+        <div style="font-size:10px;color:var(--tx3);margin-bottom:3px">Date the Early Action Review presentation was completed.</div>
+        <input type="date" id="f-ear-date">
+      </div>
+      <div class="fg">
+        <label>Days from detection to EAR presentation <span style="font-weight:400;color:var(--green)">(auto)</span></label>
+        <div style="font-size:10px;color:var(--tx3);margin-bottom:3px">Auto-calculated from detection date to EAR presentation date.</div>
+        <input id="f-ear-days" readonly placeholder="Auto-calculated" style="background:var(--surf2);color:var(--green);font-weight:600">
+      </div>
+
+    </div><!-- /.fgrid -->
     <div class="form-footer">
       <button class="btn p" onclick="submitForm()">&#10003; Save event</button>
       <button class="btn" onclick="clearForm()">Cancel</button>
       <span class="save-msg" id="save-msg"></span>
     </div>
   </div>
+
   <div class="card" id="live-calc-card" style="display:none">
     <div class="ct"><div class="ct-dot" style="background:var(--amber)"></div>Live 7-1-7 calculation</div>
     <div id="live-calc-body"></div>
@@ -423,7 +564,7 @@ input,select,textarea{font-family:inherit}
     <div class="btns"><button class="btn sm" onclick="dlJSON()">&#8659; JSON</button><button class="btn sm" onclick="dlCSV()">&#8659; CSV</button><button class="btn sm p" onclick="go('entry')">+ New event</button></div>
   </div>
   <div class="card tbl-wrap">
-    <table class="tbl"><thead><tr><th>ID</th><th>Event</th><th>Type</th><th>Province</th><th>District</th><th>Emergence</th><th>Detection</th><th>Notification</th><th>Resp. init.</th><th>E→D</th><th>D→N</th><th>N→R</th><th>7-1-7</th><th></th></tr></thead>
+    <table class="tbl"><thead><tr><th>ID</th><th>Event name</th><th>Type</th><th>Region</th><th>Province/District</th><th>City</th><th>Emergence</th><th>Detection</th><th>Det. bottlenecks</th><th>Det. enablers</th><th>Notification</th><th>Notif. bottlenecks</th><th>Notif. enablers</th><th>RA1</th><th>RA2</th><th>RA3</th><th>RA4</th><th>RA5</th><th>RA6</th><th>RA7</th><th>Resp. init.</th><th>Resp. complete</th><th>Resp. bottlenecks</th><th>Resp. enablers</th><th>End date</th><th>EAR date</th><th>Det→EAR (d)</th><th>E→D</th><th>D→N</th><th>N→R</th><th>7-1-7</th><th></th></tr></thead>
     <tbody id="tbl-body"></tbody></table>
   </div>
 </main>
@@ -769,7 +910,7 @@ function renderLive(){
 ════════════════════════════════════════════════════════════════ */
 function renderTbl(){
   if(!evts.length){document.getElementById('tbl-body').innerHTML='<tr><td colspan="14" class="empty">No events recorded.</td></tr>';return}
-  document.getElementById('tbl-body').innerHTML=evts.map(ev=>{const m=cm(ev);return`<tr><td class="m">${ev.id}</td><td><strong>${ev.name}</strong></td><td style="font-size:11px;color:var(--tx3)">${ev.type||'—'}</td><td>${ev.prov||'—'}</td><td>${ev.dist||'—'}</td><td class="m">${ev.emerge||'—'}</td><td class="m">${ev.detect||'—'}</td><td class="m">${ev.notify||'—'}</td><td class="m">${m.ri||'—'}</td><td class="m" style="color:${cday(m.d2d,7)}">${m.d2d!==null?m.d2d+'d':'—'}</td><td class="m" style="color:${cday(m.d2n,1)}">${m.d2n!==null?m.d2n+'d':'—'}</td><td class="m" style="color:${cday(m.n2r,7)}">${m.n2r!==null?m.n2r+'d':'—'}</td><td>${badge717(m)}</td><td class="ac"><button class="btn sm" onclick="editEvt(${ev.id})">Edit</button><button class="btn sm danger" onclick="delEvt(${ev.id})">Del</button></td></tr>`}).join('');
+  document.getElementById('tbl-body').innerHTML=evts.map(ev=>{const m=cm(ev);const bn=(b1,b2,b3)=>[b1,b2,b3].filter(b=>b&&b.toLowerCase()!=='none').join(' · ')||'—';return`<tr><td class="m">${ev.id}</td><td><strong>${ev.name}</strong></td><td style="font-size:11px;color:var(--tx3)">${ev.type||'—'}</td><td>${ev.prov||'—'}</td><td>${ev.dist||'—'}</td><td style="font-size:11px">${ev.city||'—'}</td><td class="m">${ev.emerge||'—'}</td><td class="m">${ev.detect||'—'}</td><td style="font-size:10px;max-width:160px">${bn(ev.db1,ev.db2,ev.db3)}</td><td style="font-size:10px;max-width:120px">${ev.den||'—'}</td><td class="m">${ev.notify||'—'}</td><td style="font-size:10px;max-width:160px">${bn(ev.nb1,ev.nb2,ev.nb3)}</td><td style="font-size:10px;max-width:120px">${ev.nen||'—'}</td><td class="m">${ev.ra1||'—'}</td><td class="m">${ev.ra2||'—'}</td><td class="m">${ev.ra3||'—'}</td><td class="m">${ev.ra4||'—'}</td><td class="m">${ev.ra5||'—'}</td><td class="m">${ev.ra6||'—'}</td><td class="m">${ev.ra7||'—'}</td><td class="m" style="color:${cday(m.n2r,7)}">${m.ri||ev.ri||'—'}</td><td class="m">${m.rc||ev.rc||'—'}</td><td style="font-size:10px;max-width:160px">${bn(ev.rb1,ev.rb2,ev.rb3)}</td><td style="font-size:10px;max-width:120px">${ev.ren||'—'}</td><td class="m">${ev.end||'—'}</td><td class="m">${ev.earDate||'—'}</td><td class="m" style="color:var(--green)">${ev.earDays||'—'}</td><td class="m" style="color:${cday(m.d2d,7)}">${m.d2d!==null?m.d2d+'d':'—'}</td><td class="m" style="color:${cday(m.d2n,1)}">${m.d2n!==null?m.d2n+'d':'—'}</td><td class="m" style="color:${cday(m.n2r,7)}">${m.n2r!==null?m.n2r+'d':'—'}</td><td>${badge717(m)}</td><td class="ac"><button class="btn sm" onclick="editEvt(${ev.id})">Edit</button><button class="btn sm danger" onclick="delEvt(${ev.id})">Del</button></td></tr>`}).join('');
 }
 
 /* ════════════════════════════════════════════════════════════════
@@ -806,11 +947,18 @@ function renderActChart(id){
 /* ════════════════════════════════════════════════════════════════
    FORM
 ════════════════════════════════════════════════════════════════ */
-const FM={name:'f-name',type:'f-type',prov:'f-prov',dist:'f-dist',city:'f-city',emerge:'f-emerge',emergeN:'f-emerge-n',detect:'f-detect',detectN:'f-detect-n',db1:'f-db1',db2:'f-db2',db3:'f-db3',den:'f-den',notify:'f-notify',notifyN:'f-notify-n',nb1:'f-nb1',nb2:'f-nb2',nb3:'f-nb3',nen:'f-nen',ra1:'f-ra1',ra2:'f-ra2',ra3:'f-ra3',ra4:'f-ra4',ra5:'f-ra5',ra6:'f-ra6',ra7:'f-ra7',rn:'f-rn',rb1:'f-rb1',rb2:'f-rb2',rb3:'f-rb3',ren:'f-ren',end:'f-end',notes:'f-notes'};
+const FM={name:'f-name',type:'f-type',prov:'f-prov',dist:'f-dist',city:'f-city',emerge:'f-emerge',emergeN:'f-emerge-n',detect:'f-detect',detectN:'f-detect-n',db1:'f-db1',db2:'f-db2',db3:'f-db3',den:'f-den',notify:'f-notify',notifyN:'f-notify-n',nb1:'f-nb1',nb2:'f-nb2',nb3:'f-nb3',nen:'f-nen',ra1:'f-ra1',ra2:'f-ra2',ra3:'f-ra3',ra4:'f-ra4',ra5:'f-ra5',ra6:'f-ra6',ra7:'f-ra7',rn:'f-rn',rb1:'f-rb1',rb2:'f-rb2',rb3:'f-rb3',ren:'f-ren',end:'f-end',notes:'f-notes',earDate:'f-ear-date'};
 function submitForm(){
   const name=document.getElementById('f-name').value.trim(),prov=document.getElementById('f-prov').value.trim();
   if(!name||!prov){alert('Event name and province are required.');return}
   const obj={};Object.entries(FM).forEach(([k,fid])=>{const el=document.getElementById(fid);obj[k]=el?el.value.trim():''});
+  // Save auto-calculated fields
+  const riEl=document.getElementById('f-ri-display');
+  const rcEl=document.getElementById('f-rc-display');
+  const earEl=document.getElementById('f-ear-days');
+  obj.ri=riEl?riEl.value.replace(/ \(.*\)/,'').trim():'';
+  obj.rc=rcEl?rcEl.value.replace(/ \(.*\)/,'').trim():'';
+  obj.earDays=earEl?earEl.value:'';
   if(editId){const i=evts.findIndex(e=>e.id===editId);if(i>=0)evts[i]={...evts[i],...obj}}
   else{obj.id=evts.length?Math.max(...evts.map(e=>e.id))+1:1;evts.push(obj)}
   sv();upCount();
@@ -819,11 +967,20 @@ function submitForm(){
   setTimeout(()=>msg.textContent='',3000);
   editId=null;document.getElementById('entry-h').textContent='New outbreak event';
 }
-function clearForm(){document.querySelectorAll('#pg-entry input,#pg-entry select,#pg-entry textarea').forEach(el=>el.value='');editId=null;document.getElementById('entry-h').textContent='New outbreak event';document.getElementById('live-calc-card').style.display='none'}
+function clearForm(){document.querySelectorAll('#pg-entry input,#pg-entry select,#pg-entry textarea').forEach(el=>el.value='');const distSel=document.getElementById('f-dist');if(distSel){distSel.innerHTML='<option value="">— select province first —</option>';}editId=null;document.getElementById('entry-h').textContent='New outbreak event';document.getElementById('live-calc-card').style.display='none'}
 function editEvt(id){
   const ev=evts.find(e=>e.id===id);if(!ev)return;
   editId=id;Object.entries(FM).forEach(([k,fid])=>{const el=document.getElementById(fid);if(el)el.value=ev[k]||''});
   document.getElementById('entry-h').textContent='Editing #'+id+' — '+ev.name;
+  // Restore province/district dropdowns
+  setProvDist(ev.prov, ev.dist);
+  // Populate auto-display fields
+  const riEl=document.getElementById('f-ri-display');
+  const rcEl=document.getElementById('f-rc-display');
+  const earEl=document.getElementById('f-ear-days');
+  if(riEl) riEl.value=ev.ri||'';
+  if(rcEl) rcEl.value=ev.rc||'';
+  if(earEl) earEl.value=ev.earDays||'';
   go('entry');liveCalc();window.scrollTo(0,0);
 }
 function delEvt(id){if(!confirm('Delete event #'+id+'?'))return;evts=evts.filter(e=>e.id!==id);sv();renderTbl()}
@@ -832,11 +989,38 @@ function delEvt(id){if(!confirm('Delete event #'+id+'?'))return;evts=evts.filter
    LIVE CALC
 ════════════════════════════════════════════════════════════════ */
 function liveCalc(){
-  const emerge=document.getElementById('f-emerge').value,detect=document.getElementById('f-detect').value,notify=document.getElementById('f-notify').value;
-  const ras=['f-ra1','f-ra2','f-ra3','f-ra4','f-ra5','f-ra6','f-ra7'].map(id=>document.getElementById(id).value).filter(Boolean).sort();
-  const d2d=dbd(emerge,detect),d2n=dbd(detect,notify),n2r=dbd(notify,ras[0]||null);
+  const emerge=document.getElementById('f-emerge').value,
+        detect=document.getElementById('f-detect').value,
+        notify=document.getElementById('f-notify').value;
+  const raIds=['f-ra1','f-ra2','f-ra3','f-ra4','f-ra5','f-ra6','f-ra7'];
+  const ras=raIds.map(id=>document.getElementById(id).value).filter(Boolean).sort();
+  const ri=ras[0]||null, rc=ras.length===7?ras[ras.length-1]:null;
+  // Update auto-calculated fields
+  const riEl=document.getElementById('f-ri-display');
+  const rcEl=document.getElementById('f-rc-display');
+  if(riEl) riEl.value=ri||'';
+  if(rcEl) rcEl.value=rc?rc+' '+(ras.length===7?'(complete)':'(incomplete — '+ras.length+'/7)'):'';
+  // EAR days
+  const earDate=document.getElementById('f-ear-date').value;
+  const earDays=document.getElementById('f-ear-days');
+  if(earDays){ const d=dbd(detect,earDate); earDays.value=d!==null?d+'d':''; }
+  // Live 7-1-7 calc panel
+  const d2d=dbd(emerge,detect),d2n=dbd(detect,notify),n2r=dbd(notify,ri);
   const card=document.getElementById('live-calc-card');
   if(d2d===null&&d2n===null&&n2r===null){card.style.display='none';return}
+  card.style.display='block';
+  const row=(label,val,target)=>{
+    if(val===null)return\`<div class="lc-row"><div class="lc-label">\${label}</div><div class="tbar"></div><div class="lc-val" style="color:var(--tx3)">—</div></div>\`;
+    const w=Math.min(Math.round(val/(Math.max(val,target)*1.4)*100),100);
+    const cls=met(val,target)?'g':val<=target*2?'w':'r';
+    const bg=met(val,target)?'var(--green)':val<=target*2?'var(--amber)':'var(--coral)';
+    return\`<div class="lc-row"><div class="lc-label">\${label}</div><div class="tbar"><div class="tfill \${cls}" style="width:\${w}%;background:\${bg}"></div></div><div class="lc-val \${cls}">\${val}d</div><span class="badge \${met(val,target)?'bmet':'bmiss'}" style="margin-left:6px">\${met(val,target)?'Met':'Missed'} (t:\${target}d)</span></div>\`;
+  };
+  document.getElementById('live-calc-body').innerHTML=
+    row('E → D detection (target 7d)',d2d,7)+
+    row('D → N notification (target 1d)',d2n,1)+
+    row('N → R response init (target 7d)',n2r,7);
+}
   card.style.display='block';
   const row=(label,val,target)=>{
     if(val===null)return`<div class="lc-row"><div class="lc-label">${label}</div><div class="tbar"></div><div class="lc-val" style="color:var(--tx3)">—</div></div>`;
@@ -1014,6 +1198,47 @@ async function pullFromServer(){
     if(active){const pid=active.id.replace('pg-','');({dash:renderDash,events:renderTbl,bneck:renderBneck,actions:renderActs,live:renderLive})[pid]?.()}
   }catch(e){
     if(st) st.innerHTML='<span style="color:var(--coral)">✗ Pull failed: '+e.message+'</span>';
+  }
+}
+
+
+/* ════════════════════════════════════════════════════════════════
+   ZAMBIA PROVINCES + DISTRICTS
+════════════════════════════════════════════════════════════════ */
+const ZAMBIA={
+  "Central":["Chibombo","Chitambo","Kabwe","Kapiri Mposhi","Mkushi","Mumbwa","Ngabwe","Serenje","Shibuyunji"],
+  "Copperbelt":["Chililabombwe","Chingola","Kalulushi","Kitwe","Luanshya","Lufwanyama","Masaiti","Mpongwe","Mufulira","Ndola"],
+  "Eastern":["Chadiza","Chama","Chelenge","Chipangali","Chipata","Kasenengwa","Katete","Lumezi","Lundazi","Lusangazi","Mambwe","Milenge","Msanzala","Nyimba","Petauke","Sinda","Vubwi"],
+  "Luapula":["Chembe","Chienge","Chiengi","Kawambwa","Lunga","Mansa","Milenge","Mwense","Nchelenge","Samfya"],
+  "Lusaka":["Chilanga","Chirundu","Chongwe","Kafue","Luangwa","Lusaka","Rufunsa","Shibuyunji"],
+  "Muchinga":["Chama","Chinsali","Isoka","Kanchibiya","Lavushi Manda","Mafinga","Mpika","Nakonde","Shiwang'andu"],
+  "Northern":["Chilubi","Kaputa","Kasama","Luwingu","Mbala","Mporokoso","Mpulungu","Mungwi","Nsama"],
+  "North-Western":["Chavuma","Ikelenge","Kabompo","Kasempa","Manyinga","Mufumbwe","Mushindamo","Mwinilunga","Solwezi","Zambezi"],
+  "Southern":["Chikankata","Chirundu","Choma","Gwembe","Itezhi-Tezhi","Kalomo","Kazungula","Livingstone","Mazabuka","Monze","Namwala","Pemba","Siavonga","Sinazeze","Sinazongwe","Zimba"],
+  "Western":["Kalabo","Kaoma","Limulunga","Lukulu","Mitete","Mongu","Mulobezi","Mwandi","Nkeyema","Senanga","Sesheke","Shangombo"]
+};
+
+function onProvChange(){
+  const prov = document.getElementById('f-prov').value;
+  const distSel = document.getElementById('f-dist');
+  distSel.innerHTML = '<option value="">— select district —</option>';
+  if (prov && ZAMBIA[prov]) {
+    ZAMBIA[prov].forEach(d => {
+      const opt = document.createElement('option');
+      opt.value = d; opt.textContent = d;
+      distSel.appendChild(opt);
+    });
+  }
+}
+
+// Used by editEvt to restore province + district dropdowns
+function setProvDist(prov, dist){
+  const provSel = document.getElementById('f-prov');
+  if (provSel) {
+    provSel.value = prov || '';
+    onProvChange();
+    const distSel = document.getElementById('f-dist');
+    if (distSel && dist) distSel.value = dist;
   }
 }
 
