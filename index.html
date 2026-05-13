@@ -261,13 +261,12 @@ input,select,textarea{font-family:inherit}
 <!-- ══ LOGIN SCREEN ═══════════════════════════════════════════════ -->
 <div id="login-screen">
   <div class="login-box">
-    <div class="login-logo" id="ll-wrap" onclick="document.getElementById('ll-file').click()" title="Click to upload ZNPHI logo">
+    <div class="login-logo" id="ll-wrap">
       <img id="ll-img" src="znphi-logo.png" alt="ZNPHI logo"
            onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"
            onload="this.style.display='block';this.nextElementSibling.style.display='none'">
       <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>
     </div>
-    <input type="file" id="ll-file" accept="image/*" style="display:none" onchange="uploadLogoFile(this)">
     <div class="login-title">ZNPHI · 7-1-7 Tracker</div>
     <div class="login-sub">Outbreak Timeliness Reporting System<br>Zambia National Public Health Institute</div>
 
@@ -300,13 +299,12 @@ input,select,textarea{font-family:inherit}
 <!-- Header -->
 <header class="hdr">
   <div class="logo-wrap">
-    <div class="logo-mark" id="hdr-logo-mark" onclick="document.getElementById('hdr-logo-file').click()" title="Click to upload ZNPHI logo">
+    <div class="logo-mark" id="hdr-logo-mark">
       <img id="hdr-logo-img" src="znphi-logo.png" alt="ZNPHI"
            onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"
            onload="this.style.display='block';this.nextElementSibling.style.display='none'">
       <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>
     </div>
-    <input type="file" id="hdr-logo-file" accept="image/*" style="display:none" onchange="uploadLogoFile(this)">
     <div>
       <div class="logo-title">ZNPHI · 7-1-7 Tracker</div>
       <div class="logo-sub">Outbreak Timeliness Reporting System</div>
@@ -469,16 +467,58 @@ input,select,textarea{font-family:inherit}
 <main class="pg" id="pg-imp">
   <div class="ph"><div><div class="ptitle">Import Excel</div><div class="psub">Upload the WHO 7-1-7 data consolidation spreadsheet (.xlsx)</div></div></div>
 
-  <!-- ZNPHI logo management -->
-  <div class="card" style="border-left:4px solid var(--green);margin-bottom:14px">
-    <div class="ct">ZNPHI logo</div>
     <div style="font-size:12px;color:var(--tx2);line-height:1.8;margin-bottom:12px">
       The logo appears in the header and on the login screen. Place <code style="background:var(--surf2);padding:1px 5px;border-radius:3px;font-size:11px">znphi-logo.png</code> in the same folder as this HTML file for automatic loading. Or upload manually below — it saves to your browser.
     </div>
     <div style="display:flex;gap:8px">
-      <button class="btn sm p" onclick="document.getElementById('hdr-logo-file').click()">Upload logo</button>
-      <button class="btn sm danger" onclick="removeSavedLogo()">Remove saved logo</button>
       <a href="https://ww2.znphi.co.zm" target="_blank" class="btn sm">Visit ZNPHI site ↗</a>
+    </div>
+  </div>
+
+  <!-- API connection card -->
+  <div class="card" style="border-left:4px solid #9E86DC;margin-bottom:14px">
+    <div class="ct" style="color:#3C3489"><div class="ct-dot" style="background:#9E86DC"></div>Railway API connection</div>
+    <div style="font-size:12px;color:var(--tx2);line-height:1.8;margin-bottom:12px">
+      Enter your Railway API URL to enable live sync. Users' events are automatically pushed to the server when saved. Admins pull all events with one click.
+    </div>
+    <div class="fgrid" style="margin-bottom:10px">
+      <div class="fg full">
+        <label>API base URL</label>
+        <input id="api-url" placeholder="https://your-app.railway.app" oninput="saveApiConfig()">
+      </div>
+      <div class="fg full">
+        <label>Admin key (admin only — leave blank if User)</label>
+        <input id="api-key" type="password" placeholder="znphi_admin_2026" oninput="saveApiConfig()">
+      </div>
+    </div>
+    <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+      <button class="btn sm p" onclick="testConnection()">Test connection</button>
+      <button class="btn sm" id="pull-btn" onclick="pullFromServer()" style="display:none">&#8595; Pull all events (Admin)</button>
+      <span id="api-status" style="font-size:12px"></span>
+    </div>
+  </div>
+
+  <!-- ══ API CONNECTION (hardcoded — admin sets once) ══ -->
+  <div class="card" style="border-left:4px solid #9E86DC;margin-bottom:14px">
+    <div class="ct" style="color:#3C3489"><div class="ct-dot" style="background:#9E86DC"></div>Railway API connection</div>
+    <div style="font-size:12px;color:var(--tx2);line-height:1.8;margin-bottom:14px">
+      Connect to the Railway backend so every saved event is automatically synced to the database.
+      Admins can also pull all events submitted by users. This config is saved in your browser.
+    </div>
+    <div class="fgrid" style="margin-bottom:12px">
+      <div class="fg full">
+        <label>API base URL</label>
+        <input id="api-url" placeholder="https://znphi-717-api-production.up.railway.app" oninput="saveApiCfg()">
+      </div>
+      <div class="fg full" id="api-key-row">
+        <label>Admin key <span style="font-weight:400;color:var(--tx3)">(Admin only — leave blank if User)</span></label>
+        <input id="api-key" type="password" placeholder="znphi_admin_2026" oninput="saveApiCfg()">
+      </div>
+    </div>
+    <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+      <button class="btn sm p" onclick="testConn()">&#10003; Test connection</button>
+      <button class="btn sm outline-green" id="pull-btn" onclick="pullFromServer()" style="display:none">&#8595; Pull all events from server</button>
+      <span id="api-status" style="font-size:12px;margin-left:4px"></span>
     </div>
   </div>
 
@@ -607,6 +647,7 @@ function startApp() {
 
   buildNav();
   ld();
+  loadApiCfg();
   go(currentRole === 'admin' ? 'dash' : 'entry');
 }
 
@@ -782,6 +823,7 @@ function submitForm(){
   if(editId){const i=evts.findIndex(e=>e.id===editId);if(i>=0)evts[i]={...evts[i],...obj}}
   else{obj.id=evts.length?Math.max(...evts.map(e=>e.id))+1:1;evts.push(obj)}
   sv();upCount();
+  syncToServer(obj, null);
   const msg=document.getElementById('save-msg');msg.textContent=editId?'✓ Event updated.':'✓ Event saved.';
   setTimeout(()=>msg.textContent='',3000);
   editId=null;document.getElementById('entry-h').textContent='New outbreak event';
@@ -828,7 +870,7 @@ function closeActModal(){const el=document.getElementById('act-modal');if(el)el.
 function saveAct(){
   const action=document.getElementById('am-action').value.trim();if(!action)return;
   acts.push({id:acts.length?Math.max(...acts.map(a=>a.id))+1:1,action,bneck:document.getElementById('am-bneck').value.trim(),eid:parseInt(document.getElementById('am-eid').value)||null,resp:document.getElementById('am-resp').value.trim(),start:document.getElementById('am-start').value,end:document.getElementById('am-end').value,status:document.getElementById('am-status').value,next:document.getElementById('am-next').value.trim()});
-  sv();closeActModal();renderActs();
+  sv();syncToServer(null, acts[acts.length-1]);closeActModal();renderActs();
 }
 function delAct(id){if(!confirm('Delete this action?'))return;acts=acts.filter(a=>a.id!==id);sv();renderActs()}
 
@@ -867,27 +909,122 @@ function doImport(){
 }
 
 /* ════════════════════════════════════════════════════════════════
-   LOGO
+   LOGO — served from znphi-logo.png in repo root (no upload needed)
 ════════════════════════════════════════════════════════════════ */
-function uploadLogoFile(inp){
-  const file=inp.files[0];if(!file)return;
-  const rdr=new FileReader();
-  rdr.onload=function(e){
-    localStorage.setItem('znphi_logo',e.target.result);
-    applyLogo(e.target.result);
-  };
-  rdr.readAsDataURL(file);
+// Logo loads automatically via src="znphi-logo.png" in the HTML.
+// onerror fallback shows the green SVG mark if the file is missing.
+
+
+/* ════════════════════════════════════════════════════════════════
+   API SYNC — Railway backend
+════════════════════════════════════════════════════════════════ */
+function getApiUrl(){ return (localStorage.getItem('znphi_api_url')||'').replace(/\/$/,''); }
+function getApiKey(){ return localStorage.getItem('znphi_api_key')||''; }
+
+function saveApiCfg(){
+  const url=(document.getElementById('api-url')||{}).value||'';
+  const key=(document.getElementById('api-key')||{}).value||'';
+  if(url) localStorage.setItem('znphi_api_url', url.trim());
+  else localStorage.removeItem('znphi_api_url');
+  if(key) localStorage.setItem('znphi_api_key', key.trim());
+  else localStorage.removeItem('znphi_api_key');
+  const pb=document.getElementById('pull-btn');
+  if(pb) pb.style.display=key.trim()?'inline-flex':'none';
+  updateSyncPill();
 }
-function applyLogo(data){
-  ['hdr-logo-img','ll-img'].forEach(id=>{
-    const img=document.getElementById(id);if(!img)return;
-    if(data){img.src=data;img.style.display='block';img.nextElementSibling&&(img.nextElementSibling.style.display='none')}
-    else{img.style.display='none';img.nextElementSibling&&(img.nextElementSibling.style.display='flex')}
-  });
+
+function loadApiCfg(){
+  const urlEl=document.getElementById('api-url');
+  const keyEl=document.getElementById('api-key');
+  if(urlEl) urlEl.value=getApiUrl();
+  if(keyEl) keyEl.value=getApiKey();
+  const pb=document.getElementById('pull-btn');
+  if(pb) pb.style.display=getApiKey()?'inline-flex':'none';
+  updateSyncPill();
 }
-function removeSavedLogo(){localStorage.removeItem('znphi_logo');applyLogo(null)}
-// Load saved or repo logo on startup
-(function(){const saved=localStorage.getItem('znphi_logo');if(saved)applyLogo(saved)})();
+
+function updateSyncPill(){
+  const pill=document.getElementById('offline-pill');
+  if(!pill) return;
+  if(getApiUrl()){ pill.textContent='Online'; pill.className='pill pill-green'; }
+  else { pill.textContent='Offline'; pill.className='pill pill-amber'; }
+}
+
+async function testConn(){
+  const url=getApiUrl();
+  const st=document.getElementById('api-status');
+  if(!st) return;
+  if(!url){ st.innerHTML='<span style="color:var(--coral)">Enter API URL first.</span>'; return; }
+  st.innerHTML='Testing…';
+  try{
+    const r=await fetch(url+'/',{signal:AbortSignal.timeout(7000)});
+    const j=await r.json();
+    st.innerHTML=j.status==='ok'
+      ?'<span style="color:var(--green);font-weight:600">✓ Connected — '+j.service+'</span>'
+      :'<span style="color:var(--coral)">Unexpected response.</span>';
+  }catch(e){
+    st.innerHTML='<span style="color:var(--coral)">✗ Cannot reach API: '+e.message+'</span>';
+  }
+}
+
+async function syncToServer(event, action){
+  const url=getApiUrl();
+  if(!url) return;
+  const pill=document.getElementById('offline-pill');
+  const setBadge=(txt,cls)=>{ if(pill){pill.textContent=txt;pill.className='pill '+cls;} };
+  try{
+    if(event){
+      await fetch(url+'/api/events',{
+        method:'POST', headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({...event, submitted_by:currentRole||'user', client_id:String(event.id)}),
+        signal:AbortSignal.timeout(8000)
+      });
+    }
+    if(action){
+      await fetch(url+'/api/actions',{
+        method:'POST', headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({...action, submitted_by:currentRole||'user', client_id:String(action.id)}),
+        signal:AbortSignal.timeout(8000)
+      });
+    }
+    setBadge('✓ Synced','pill-green');
+    setTimeout(()=>updateSyncPill(), 3000);
+  }catch(e){
+    setBadge('⚠ Offline','pill-amber');
+    console.warn('Sync failed — saved locally:',e.message);
+  }
+}
+
+async function pullFromServer(){
+  const url=getApiUrl(), key=getApiKey();
+  const st=document.getElementById('api-status');
+  if(!url||!key){ if(st) st.innerHTML='<span style="color:var(--coral)">API URL and Admin key required.</span>'; return; }
+  if(st) st.innerHTML='Pulling from server…';
+  try{
+    const [er,ar]=await Promise.all([
+      fetch(url+'/api/events', {headers:{'x-admin-key':key},signal:AbortSignal.timeout(12000)}),
+      fetch(url+'/api/actions',{headers:{'x-admin-key':key},signal:AbortSignal.timeout(12000)})
+    ]);
+    if(er.status===401){ if(st) st.innerHTML='<span style="color:var(--coral)">✗ Wrong admin key.</span>'; return; }
+    const ed=await er.json(), ad=await ar.json();
+    ed.events.forEach(se=>{
+      const idx=evts.findIndex(e=>String(e.id)===String(se.client_id)||String(e.id)===String(se.id));
+      const merged={...se, id:se.client_id||se.id};
+      if(idx>=0) evts[idx]=merged; else evts.push(merged);
+    });
+    ad.actions.forEach(sa=>{
+      const idx=acts.findIndex(a=>String(a.id)===String(sa.client_id)||String(a.id)===String(sa.id));
+      const merged={...sa, id:sa.client_id||sa.id};
+      if(idx>=0) acts[idx]=merged; else acts.push(merged);
+    });
+    sv(); upCount();
+    if(st) st.innerHTML='<span style="color:var(--green);font-weight:600">✓ Pulled '+ed.count+' events and '+ad.count+' actions.</span>';
+    const active=document.querySelector('.pg.on');
+    if(active){const pid=active.id.replace('pg-','');({dash:renderDash,events:renderTbl,bneck:renderBneck,actions:renderActs,live:renderLive})[pid]?.()}
+  }catch(e){
+    if(st) st.innerHTML='<span style="color:var(--coral)">✗ Pull failed: '+e.message+'</span>';
+  }
+}
 
 /* ════════════════════════════════════════════════════════════════
    INIT
