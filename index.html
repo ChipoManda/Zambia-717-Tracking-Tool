@@ -628,6 +628,20 @@ input,select,textarea{font-family:inherit}
     </div>
   </div>
 
+
+  <!-- Sync all local events to server -->
+  <div class="card" style="border-left:4px solid var(--green);margin-bottom:14px">
+    <div class="ct"><div class="ct-dot" style="background:var(--green)"></div>Sync all data to Railway server</div>
+    <div style="font-size:12px;color:var(--tx2);line-height:1.8;margin-bottom:14px">
+      After importing your Excel file, click below to push <strong>all local events and actions</strong> to the Railway database in one go.
+      This is also useful to re-sync after any offline edits.
+    </div>
+    <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+      <button class="btn p" id="sync-all-btn" onclick="syncAllToServer()">&#8593; Sync all to server</button>
+      <span id="sync-all-status" style="font-size:12px;margin-left:4px"></span>
+    </div>
+  </div>
+
   <!-- Excel upload -->
   <div class="card">
     <div class="ct">Import from Excel file</div>
@@ -962,6 +976,7 @@ function submitForm(){
   obj.ri=riEl?riEl.value.replace(/ \(.*\)/,'').trim():'';
   obj.rc=rcEl?rcEl.value.replace(/ \(.*\)/,'').trim():'';
   obj.earDays=earEl?earEl.value:'';
+  obj=calcAutoFields(obj);
   if(editId){const i=evts.findIndex(e=>e.id===editId);if(i>=0)evts[i]={...evts[i],...obj}}
   else{obj.id=evts.length?Math.max(...evts.map(e=>e.id))+1:1;evts.push(obj)}
   sv();upCount();
@@ -1067,19 +1082,62 @@ function procXL(file){
       const wb=XLSX.read(e.target.result,{type:'array',cellDates:true}),ws=wb.Sheets['1. Input timeliness data'];
       if(!ws){document.getElementById('xl-msg').innerHTML='<span style="color:var(--coral);font-weight:700">Sheet not found.</span> Upload the WHO 7-1-7 consolidation spreadsheet.';return}
       const data=XLSX.utils.sheet_to_json(ws,{header:1,raw:false,dateNF:'YYYY-MM-DD'}),imp=[];
-      for(let r=3;r<data.length;r++){const row=data[r];if(!row||!row[1])continue;imp.push({id:row[0]||imp.length+1,name:fmt(row[1]),type:fmt(row[2]),prov:fmt(row[3]),dist:fmt(row[4]),city:fmt(row[5]),emerge:fmt(row[6]),emergeN:fmt(row[7]),detect:fmt(row[8]),detectN:fmt(row[9]),db1:fmt(row[10]),db2:fmt(row[11]),db3:fmt(row[12]),den:fmt(row[13]),notify:fmt(row[14]),notifyN:fmt(row[15]),nb1:fmt(row[16]),nb2:fmt(row[17]),nb3:fmt(row[18]),nen:fmt(row[19]),ra1:fmt(row[20]),ra2:fmt(row[21]),ra3:fmt(row[22]),ra4:fmt(row[23]),ra5:fmt(row[24]),ra6:fmt(row[25]),ra7:fmt(row[26]),rn:fmt(row[29]),rb1:fmt(row[30]),rb2:fmt(row[31]),rb3:fmt(row[32]),ren:fmt(row[33]),end:fmt(row[34]),notes:fmt(row[35])})}
+      for(let r=3;r<data.length;r++){const row=data[r];if(!row||!row[1])continue;imp.push({id:row[0]||imp.length+1,name:fmt(row[1]),type:fmt(row[2]),prov:fmt(row[3]),dist:fmt(row[4]),city:fmt(row[5]),emerge:fmt(row[6]),emergeN:fmt(row[7]),detect:fmt(row[8]),detectN:fmt(row[9]),db1:fmt(row[10]),db2:fmt(row[11]),db3:fmt(row[12]),den:fmt(row[13]),notify:fmt(row[14]),notifyN:fmt(row[15]),nb1:fmt(row[16]),nb2:fmt(row[17]),nb3:fmt(row[18]),nen:fmt(row[19]),ra1:fmt(row[20]),ra2:fmt(row[21]),ra3:fmt(row[22]),ra4:fmt(row[23]),ra5:fmt(row[24]),ra6:fmt(row[25]),ra7:fmt(row[26]),rn:fmt(row[29]),rb1:fmt(row[30]),rb2:fmt(row[31]),rb3:fmt(row[32]),ren:fmt(row[33]),end:fmt(row[34]),notes:fmt(row[35]),earDate:fmt(row[36])})}
       window._xlImp=imp;
       document.getElementById('xl-msg').innerHTML=`<span style="color:var(--green);font-weight:700">✓ ${imp.length} event(s) found.</span> <button class="btn sm p" onclick="doImport()" style="margin-left:8px">Import all →</button>`;
       document.getElementById('xl-prev').innerHTML=`<div style="font-size:11px;color:var(--tx3);margin-bottom:7px">Preview — first 3 rows:</div><table class="tbl"><thead><tr><th>ID</th><th>Event</th><th>Province</th><th>District</th><th>Detection</th><th>E→D</th><th>D→N</th></tr></thead><tbody>${imp.slice(0,3).map(ev=>{const m=cm(ev);return`<tr><td class="m">${ev.id}</td><td>${ev.name}</td><td>${ev.prov}</td><td>${ev.dist||'N/A'}</td><td class="m">${ev.detect||'N/A'}</td><td class="m">${m.d2d!==null?m.d2d+'d':'N/A'}</td><td class="m">${m.d2n!==null?m.d2n+'d':'N/A'}</td></tr>`}).join('')}</tbody></table>`;
     }catch(err){document.getElementById('xl-msg').innerHTML='<span style="color:var(--coral);font-weight:700">Error:</span> '+err.message}
   };rdr.readAsArrayBuffer(file);
 }
+function calcAutoFields(ev){
+  var ras=[ev.ra1,ev.ra2,ev.ra3,ev.ra4,ev.ra5,ev.ra6,ev.ra7].filter(Boolean).sort();
+  ev.ri=ras[0]||'';
+  ev.rc=ras.length===7?ras[ras.length-1]:'';
+  var ed=dbd(ev.detect,ev.earDate);
+  ev.earDays=ed!==null?ed+'d':'';
+  return ev;
+}
+
 function doImport(){
   if(!window._xlImp)return;
-  window._xlImp.forEach(ev=>{const i=evts.findIndex(e=>String(e.id)===String(ev.id));if(i>=0)evts[i]=ev;else evts.push(ev)});
+  window._xlImp.forEach(function(ev){
+    ev=calcAutoFields(ev);
+    var i=evts.findIndex(function(e){return String(e.id)===String(ev.id);});
+    if(i>=0) evts[i]=ev; else evts.push(ev);
+  });
   sv();upCount();
-  document.getElementById('xl-msg').innerHTML=`<span style="color:var(--green);font-weight:700">✓ ${window._xlImp.length} event(s) imported.</span>`;
-  document.getElementById('xl-prev').innerHTML='';window._xlImp=null;
+  document.getElementById('xl-msg').innerHTML='<span style="color:var(--green);font-weight:700">&#10003; '+window._xlImp.length+' event(s) imported and synced.</span>';
+  document.getElementById('xl-prev').innerHTML='';
+  window._xlImp=null;
+}
+
+async function syncAllToServer(){
+  var url=getApiUrl();
+  var btn=document.getElementById('sync-all-btn');
+  var st=document.getElementById('sync-all-status');
+  if(!url){st.innerHTML='<span style="color:var(--coral)">Set API URL first in the connection card above.</span>';return;}
+  if(!evts.length){st.innerHTML='<span style="color:var(--tx3)">No local events to sync.</span>';return;}
+  btn.disabled=true;btn.textContent='Syncing...';
+  st.innerHTML='';
+  var ok=0,fail=0;
+  for(var i=0;i<evts.length;i++){
+    try{
+      var payload=Object.assign({},evts[i],{submitted_by:'admin',client_id:String(evts[i].id)});
+      var r=await fetch(url+'/api/events',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload),signal:AbortSignal.timeout(10000)});
+      if(r.ok) ok++; else fail++;
+    }catch(e){fail++;}
+    st.innerHTML='<span style="color:var(--tx2)">Syncing '+ok+' of '+evts.length+'...</span>';
+  }
+  for(var j=0;j<acts.length;j++){
+    try{
+      var ap=Object.assign({},acts[j],{submitted_by:'admin',client_id:String(acts[j].id)});
+      await fetch(url+'/api/actions',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(ap),signal:AbortSignal.timeout(10000)});
+    }catch(e){}
+  }
+  btn.disabled=false;btn.textContent='Sync all to server';
+  st.innerHTML=fail===0
+    ?'<span style="color:var(--green);font-weight:600">&#10003; '+ok+' events and '+acts.length+' actions synced to Railway database.</span>'
+    :'<span style="color:var(--amber);font-weight:600">'+ok+' synced, '+fail+' failed. Check connection.</span>';
 }
 
 /* ════════════════════════════════════════════════════════════════
