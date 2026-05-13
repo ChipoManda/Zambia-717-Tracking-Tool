@@ -4,6 +4,9 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>ZNPHI · WHO 7-1-7 Outbreak Timeliness Dashboard</title>
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
 <meta name="description" content="Zambia National Public Health Institute — WHO 7-1-7 Outbreak Timeliness Reporting System">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -854,7 +857,7 @@ function renderDash(){
     <div class="mc steel"><div class="ml">Bottlenecks</div><div class="mv">${cntBn()}</div><div class="ms">Total recorded</div></div>
     <div class="mc amber"><div class="ml">Actions</div><div class="mv">${acts.length}</div><div class="ms">${acts.filter(a=>a.status==='Completed').length} completed</div></div>`;
   const avgD=avg(ms.map(m=>m.d2d)),avgN=avg(ms.map(m=>m.d2n)),avgR=avg(ms.map(m=>m.n2r));
-  document.getElementById('d-bars').innerHTML=[{l:'E → D detection',t:7,v:avgD},{l:'D → N notification',t:1,v:avgN},{l:'N → R response',t:7,v:avgR}].map(b=>{
+  document.getElementById('d-bars').innerHTML=[{l:'E to D detection',t:7,v:avgD},{l:'D to N notification',t:1,v:avgN},{l:'N to R response',t:7,v:avgR}].map(b=>{
     if(b.v===null)return`<div class="ibar"><div class="ibar-top"><span class="ibar-label">${b.l}</span><span style="color:var(--tx3);font-size:11px">No data</span></div><div class="ibar-track"></div></div>`;
     const w=Math.min(Math.round(b.v/(Math.max(b.v,b.t)*1.5)*100),100);
     const bg=met(b.v,b.t)?'var(--green)':b.v<=b.t*2?'var(--amber)':'var(--coral)';
@@ -989,47 +992,43 @@ function delEvt(id){if(!confirm('Delete event #'+id+'?'))return;evts=evts.filter
    LIVE CALC
 ════════════════════════════════════════════════════════════════ */
 function liveCalc(){
-  const emerge=document.getElementById('f-emerge').value,
-        detect=document.getElementById('f-detect').value,
-        notify=document.getElementById('f-notify').value;
-  const raIds=['f-ra1','f-ra2','f-ra3','f-ra4','f-ra5','f-ra6','f-ra7'];
-  const ras=raIds.map(id=>document.getElementById(id).value).filter(Boolean).sort();
-  const ri=ras[0]||null, rc=ras.length===7?ras[ras.length-1]:null;
-  // Update auto-calculated fields
-  const riEl=document.getElementById('f-ri-display');
-  const rcEl=document.getElementById('f-rc-display');
-  if(riEl) riEl.value=ri||'';
-  if(rcEl) rcEl.value=rc?rc+' '+(ras.length===7?'(complete)':'(incomplete — '+ras.length+'/7)'):'';
-  // EAR days
-  const earDate=document.getElementById('f-ear-date').value;
-  const earDays=document.getElementById('f-ear-days');
-  if(earDays){ const d=dbd(detect,earDate); earDays.value=d!==null?d+'d':''; }
-  // Live 7-1-7 calc panel
-  const d2d=dbd(emerge,detect),d2n=dbd(detect,notify),n2r=dbd(notify,ri);
-  const card=document.getElementById('live-calc-card');
-  if(d2d===null&&d2n===null&&n2r===null){card.style.display='none';return}
-  card.style.display='block';
-  const row=(label,val,target)=>{
-    if(val===null)return\`<div class="lc-row"><div class="lc-label">\${label}</div><div class="tbar"></div><div class="lc-val" style="color:var(--tx3)">—</div></div>\`;
-    const w=Math.min(Math.round(val/(Math.max(val,target)*1.4)*100),100);
-    const cls=met(val,target)?'g':val<=target*2?'w':'r';
-    const bg=met(val,target)?'var(--green)':val<=target*2?'var(--amber)':'var(--coral)';
-    return\`<div class="lc-row"><div class="lc-label">\${label}</div><div class="tbar"><div class="tfill \${cls}" style="width:\${w}%;background:\${bg}"></div></div><div class="lc-val \${cls}">\${val}d</div><span class="badge \${met(val,target)?'bmet':'bmiss'}" style="margin-left:6px">\${met(val,target)?'Met':'Missed'} (t:\${target}d)</span></div>\`;
-  };
-  document.getElementById('live-calc-body').innerHTML=
-    row('E → D detection (target 7d)',d2d,7)+
-    row('D → N notification (target 1d)',d2n,1)+
-    row('N → R response init (target 7d)',n2r,7);
+  var emerge=document.getElementById("f-emerge").value;
+  var detect=document.getElementById("f-detect").value;
+  var notify=document.getElementById("f-notify").value;
+  var raIds=["f-ra1","f-ra2","f-ra3","f-ra4","f-ra5","f-ra6","f-ra7"];
+  var ras=raIds.map(function(id){return document.getElementById(id).value;}).filter(Boolean).sort();
+  var ri=ras[0]||null;
+  var rc=ras.length===7?ras[ras.length-1]:null;
+  var riEl=document.getElementById("f-ri-display");
+  var rcEl=document.getElementById("f-rc-display");
+  if(riEl) riEl.value=ri||"";
+  if(rcEl) rcEl.value=rc?(rc+(ras.length===7?" (complete)":" (incomplete "+ras.length+"/7)")):""; 
+  var earDate=document.getElementById("f-ear-date").value;
+  var earDays=document.getElementById("f-ear-days");
+  if(earDays){var ed=dbd(detect,earDate);earDays.value=ed!==null?ed+"d":"";
 }
-  card.style.display='block';
-  const row=(label,val,target)=>{
-    if(val===null)return`<div class="lc-row"><div class="lc-label">${label}</div><div class="tbar"></div><div class="lc-val" style="color:var(--tx3)">—</div></div>`;
-    const w=Math.min(Math.round(val/(Math.max(val,target)*1.4)*100),100);
-    const cls=met(val,target)?'g':val<=target*2?'w':'r';
-    const bg=met(val,target)?'var(--green)':val<=target*2?'var(--amber)':'var(--coral)';
-    return`<div class="lc-row"><div class="lc-label">${label}</div><div class="tbar"><div class="tfill ${cls}" style="width:${w}%;background:${bg}"></div></div><div class="lc-val ${cls}">${val}d</div><span class="badge ${met(val,target)?'bmet':'bmiss'}" style="margin-left:6px">${met(val,target)?'Met':'Missed'} (t:${target}d)</span></div>`;
-  };
-  document.getElementById('live-calc-body').innerHTML=row('E → D detection (target 7d)',d2d,7)+row('D → N notification (target 1d)',d2n,1)+row('N → R response init (target 7d)',n2r,7);
+  var d2d=dbd(emerge,detect),d2n=dbd(detect,notify),n2r=dbd(notify,ri);
+  var card=document.getElementById("live-calc-card");
+  if(d2d===null&&d2n===null&&n2r===null){card.style.display="none";return;}
+  card.style.display="block";
+  function mkRow(label,val,target){
+    if(val===null){
+      return "<div class=\"lc-row\"><div class=\"lc-label\">"+label+"</div><div class=\"tbar\"></div><div class=\"lc-val\" style=\"color:var(--tx3)\">&#8212;</div></div>";
+    }
+    var w=Math.min(Math.round(val/(Math.max(val,target)*1.4)*100),100);
+    var cls=met(val,target)?"g":val<=target*2?"w":"r";
+    var bg=met(val,target)?"var(--green)":val<=target*2?"var(--amber)":"var(--coral)";
+    var bclass=met(val,target)?"bmet":"bmiss";
+    var btxt=met(val,target)?"Met":"Missed";
+    return "<div class=\"lc-row\"><div class=\"lc-label\">"+label+"</div>"
+      +"<div class=\"tbar\"><div class=\"tfill "+cls+"\" style=\"width:"+w+"%;background:"+bg+"\"></div></div>"
+      +"<div class=\"lc-val "+cls+"\">"+val+"d</div>"
+      +"<span class=\"badge "+bclass+"\" style=\"margin-left:6px\">"+btxt+" (t:"+target+"d)</span></div>";
+  }
+  document.getElementById("live-calc-body").innerHTML=
+    mkRow("E to D detection (target 7d)",d2d,7)+
+    mkRow("D to N notification (target 1d)",d2n,1)+
+    mkRow("N to R response init (target 7d)",n2r,7);
 }
 
 /* ════════════════════════════════════════════════════════════════
