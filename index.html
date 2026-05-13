@@ -637,23 +637,21 @@ input,select,textarea{font-family:inherit}
   <div class="ph">
     <div>
       <div class="ptitle">Import data</div>
-      <div class="psub">Connect to the Railway API or upload the WHO 7-1-7 Excel consolidation spreadsheet</div>
+      <div class="psub">Connect to the Server API or upload the WHO 7-1-7 Excel consolidation spreadsheet</div>
     </div>
   </div>
 
   <!-- API connection card — single, clean -->
   <div class="card" style="border-left:4px solid #9E86DC;margin-bottom:14px">
-    <div class="ct" style="color:#3C3489">
-      <div class="ct-dot" style="background:#9E86DC"></div>Railway API connection
-    </div>
+    <div class="ct" style="color:#3C3489"><div class="ct-dot" style="background:#9E86DC"></div>Step 1 — Server API connection</div>
     <div style="font-size:12px;color:var(--tx2);line-height:1.8;margin-bottom:14px">
-      Enter your Railway API URL below. Events are automatically synced to the server each time they are saved.
+      Enter your server API URL below. Events are automatically synced to the server each time they are saved.
       Admins can pull all events submitted by users using the button below.
     </div>
     <div class="fgrid" style="margin-bottom:12px">
       <div class="fg full">
         <label>API base URL</label>
-        <input id="api-url" placeholder="https://znphi-717-api-production.up.railway.app" oninput="saveApiCfg()">
+        <input id="api-url" placeholder="https://your-server-url.up.railway.app" oninput="saveApiCfg()">
       </div>
       <div class="fg full" id="api-key-row">
         <label>Admin key <span style="font-weight:400;color:var(--tx3)">(Admin only — leave blank if User)</span></label>
@@ -670,10 +668,10 @@ input,select,textarea{font-family:inherit}
 
   <!-- Sync all local events to server -->
   <div class="card" style="border-left:4px solid var(--green);margin-bottom:14px">
-    <div class="ct"><div class="ct-dot" style="background:var(--green)"></div>Sync all data to Railway server</div>
+    <div class="ct"><div class="ct-dot" style="background:var(--green)"></div>Step 2 — Sync all data to server</div>
     <div style="font-size:12px;color:var(--tx2);line-height:1.8;margin-bottom:14px">
-      After importing your Excel file, click below to push <strong>all local events and actions</strong> to the Railway database in one go.
-      This is also useful to re-sync after any offline edits.
+      After importing your Excel file below, click <strong>Sync all to server</strong> to push every event and action
+      to the server database. Do this whenever you add new events offline too.
     </div>
     <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
       <button class="btn p" id="sync-all-btn" onclick="syncAllToServer()">&#8593; Sync all to server</button>
@@ -683,7 +681,7 @@ input,select,textarea{font-family:inherit}
 
   <!-- Excel upload -->
   <div class="card">
-    <div class="ct">Import from Excel file</div>
+    <div class="ct">Step 3 — Import from Excel file</div>
     <input type="file" id="xl-in" accept=".xlsx,.xls" style="display:none" onchange="readXL(this)">
     <div class="upzone" id="upzone"
          onclick="document.getElementById('xl-in').click()"
@@ -802,7 +800,7 @@ const NAV_ADMIN = [
   { id:'events',  label:'Events Table' },
   { id:'bneck',   label:'Bottlenecks' },
   { id:'actions', label:'Remedial Actions' },
-  { id:'imp',     label:'Import Data },
+  { id:'imp',     label:'Import data' },
 ];
 const NAV_USER = [
   { id:'entry', label:'Enter / Edit Event' },
@@ -1186,7 +1184,17 @@ function editEvt(id){
   if(earEl) earEl.value=ev.earDays||'';
   go('entry');liveCalc();window.scrollTo(0,0);
 }
-function delEvt(id){if(!confirm('Delete event #'+id+'?'))return;evts=evts.filter(e=>e.id!==id);sv();renderTbl()}
+function delEvt(id){
+  if(!confirm('Delete event #'+id+'? This removes it from local storage AND the server.'))return;
+  evts=evts.filter(function(e){return e.id!==id;});
+  sv();renderTbl();
+  var url=getApiUrl(),key=getApiKey();
+  if(url&&key){
+    fetch(url+'/api/events/'+id,{method:'DELETE',headers:{'x-admin-key':key},signal:AbortSignal.timeout(8000)})
+    .then(function(r){if(r.ok)console.log('Event #'+id+' deleted from server.');})
+    .catch(function(e){console.warn('Server delete failed:',e.message);});
+  }
+}
 
 /* ════════════════════════════════════════════════════════════════
    LIVE CALC
@@ -1246,7 +1254,17 @@ function saveAct(){
   acts.push({id:acts.length?Math.max(...acts.map(a=>a.id))+1:1,action,bneck:document.getElementById('am-bneck').value.trim(),eid:parseInt(document.getElementById('am-eid').value)||null,resp:document.getElementById('am-resp').value.trim(),start:document.getElementById('am-start').value,end:document.getElementById('am-end').value,status:document.getElementById('am-status').value,next:document.getElementById('am-next').value.trim()});
   sv();syncToServer(null, acts[acts.length-1]);closeActModal();renderActs();
 }
-function delAct(id){if(!confirm('Delete this action?'))return;acts=acts.filter(a=>a.id!==id);sv();renderActs()}
+function delAct(id){
+  if(!confirm('Delete this action? This removes it from local storage AND the server.'))return;
+  acts=acts.filter(function(a){return a.id!==id;});
+  sv();renderActs();
+  var url=getApiUrl(),key=getApiKey();
+  if(url&&key){
+    fetch(url+'/api/actions/'+id,{method:'DELETE',headers:{'x-admin-key':key},signal:AbortSignal.timeout(8000)})
+    .then(function(r){if(r.ok)console.log('Action #'+id+' deleted from server.');})
+    .catch(function(e){console.warn('Server delete failed:',e.message);});
+  }
+}
 
 /* ════════════════════════════════════════════════════════════════
    EXPORT
@@ -1321,7 +1339,7 @@ async function syncAllToServer(){
   }
   btn.disabled=false;btn.textContent='Sync all to server';
   st.innerHTML=fail===0
-    ?'<span style="color:var(--green);font-weight:600">&#10003; '+ok+' events and '+acts.length+' actions synced to Railway database.</span>'
+    ?'<span style="color:var(--green);font-weight:600">&#10003; '+ok+' events and '+acts.length+' actions synced to server.</span>'
     :'<span style="color:var(--amber);font-weight:600">'+ok+' synced, '+fail+' failed. Check connection.</span>';
 }
 
@@ -1333,7 +1351,7 @@ async function syncAllToServer(){
 
 
 /* ════════════════════════════════════════════════════════════════
-   API SYNC — Railway backend
+   API SYNC — server
 ════════════════════════════════════════════════════════════════ */
 function getApiUrl(){ return (localStorage.getItem('znphi_api_url')||'').replace(/\/$/,''); }
 function getApiKey(){ return localStorage.getItem('znphi_api_key')||''; }
