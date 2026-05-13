@@ -732,7 +732,7 @@ input,select,textarea{font-family:inherit}
 /* ════════════════════════════════════════════════════════════════
    AUTH
 ════════════════════════════════════════════════════════════════ */
-// Credentials — change these before deploying
+// Credentials -- change these before deploying
 const CREDS = {
   admin: { password: 'znphi@admin2026', role: 'admin' },
   user:  { password: 'znphi@user2026',  role: 'user'  }
@@ -791,7 +791,7 @@ function checkSession() {
 }
 
 /* ════════════════════════════════════════════════════════════════
-   NAV — role-aware
+   NAV -- role-aware
 ════════════════════════════════════════════════════════════════ */
 const NAV_ADMIN = [
   { id:'dash',    label:'Overview' },
@@ -898,12 +898,12 @@ function renderDash(){
   const full=ms.filter(m=>met(m.d2d,7)&&met(m.d2n,1)&&met(m.n2r,7)).length;
   const p=x=>n?Math.round(x/n*100):0;
   const cls=(v,t)=>v===t&&t?'green':v>0?'amber':'red';
-  document.getElementById('d-sub').textContent=n+' event'+(n!==1?'s':'')+' · '+new Date().toLocaleDateString('en-ZM',{day:'numeric',month:'long',year:'numeric'});
+  document.getElementById('d-sub').textContent=n+' event'+(n!==1?'s':'')+' . '+new Date().toLocaleDateString('en-ZM',{day:'numeric',month:'long',year:'numeric'});
   document.getElementById('kpi-grid').innerHTML=`
     <div class="mc steel"><div class="ml">Total events</div><div class="mv">${n}</div><div class="ms">All time</div></div>
-    <div class="mc ${cls(d7,n)==='red'?'red':cls(d7,n)==='amber'?'amber':''}"><div class="ml">Detection ≤ 7d</div><div class="mv ${cls(d7,n)}">${p(d7)}%</div><div class="ms">${d7}/${n} met</div></div>
-    <div class="mc ${cls(n1,n)==='red'?'red':cls(n1,n)==='amber'?'amber':''}"><div class="ml">Notification ≤ 1d</div><div class="mv ${cls(n1,n)}">${p(n1)}%</div><div class="ms">${n1}/${n} met</div></div>
-    <div class="mc ${cls(r7,n)==='red'?'red':cls(r7,n)==='amber'?'amber':''}"><div class="ml">Response ≤ 7d</div><div class="mv ${cls(r7,n)}">${p(r7)}%</div><div class="ms">${r7}/${n} met</div></div>
+    <div class="mc ${cls(d7,n)==='red'?'red':cls(d7,n)==='amber'?'amber':''}"><div class="ml">Detection &lt;= 7d</div><div class="mv ${cls(d7,n)}">${p(d7)}%</div><div class="ms">${d7}/${n} met</div></div>
+    <div class="mc ${cls(n1,n)==='red'?'red':cls(n1,n)==='amber'?'amber':''}"><div class="ml">Notification &lt;= 1d</div><div class="mv ${cls(n1,n)}">${p(n1)}%</div><div class="ms">${n1}/${n} met</div></div>
+    <div class="mc ${cls(r7,n)==='red'?'red':cls(r7,n)==='amber'?'amber':''}"><div class="ml">Response &lt;= 7d</div><div class="mv ${cls(r7,n)}">${p(r7)}%</div><div class="ms">${r7}/${n} met</div></div>
     <div class="mc ${cls(full,n)==='red'?'red':cls(full,n)==='amber'?'amber':''}"><div class="ml">Full 7-1-7</div><div class="mv ${cls(full,n)}">${p(full)}%</div><div class="ms">${full}/${n} fully compliant</div></div>
     <div class="mc steel"><div class="ml">Bottlenecks</div><div class="mv">${cntBn()}</div><div class="ms">Total recorded</div></div>
     <div class="mc amber"><div class="ml">Actions</div><div class="mv">${acts.length}</div><div class="ms">${acts.filter(a=>a.status==='Completed').length} completed</div></div>`;
@@ -917,8 +917,8 @@ function renderDash(){
   }).join('');
   renderMap();
   const recent=[...evts].reverse().slice(0,6);
-  if(!recent.length){document.getElementById('d-recent').innerHTML='<div class="empty">No events yet. <a href="#" onclick="go(\'entry\');return false">Add first event →</a></div>';return}
-  document.getElementById('d-recent').innerHTML=`<table class="tbl"><thead><tr><th>ID</th><th>Event</th><th>Location</th><th>Detection</th><th>E→D</th><th>D→N</th><th>N→R</th><th>7-1-7</th><th></th></tr></thead><tbody>${recent.map(ev=>{const m=cm(ev);return`<tr><td class="m">${ev.id}</td><td><strong>${ev.name}</strong></td><td style="font-size:11px;color:var(--tx3)">${ev.prov}${ev.dist?', '+ev.dist:''}</td><td class="m">${ev.detect||'N/A'}</td><td class="m" style="color:${cday(m.d2d,7)}">${m.d2d!==null?m.d2d+'d':'N/A'}</td><td class="m" style="color:${cday(m.d2n,1)}">${m.d2n!==null?m.d2n+'d':'N/A'}</td><td class="m" style="color:${cday(m.n2r,7)}">${m.n2r!==null?m.n2r+'d':'N/A'}</td><td>${badge717(m)}</td><td><button class="btn sm" onclick="editEvt(${ev.id})">Edit</button></td></tr>`}).join('')}</tbody></table>`;
+  if(!recent.length){document.getElementById('d-recent').innerHTML='<div class="empty">No events yet. <a href="#" onclick="go(\'entry\');return false">Add first event -></a></div>';return}
+  document.getElementById('d-recent').innerHTML=`<table class="tbl"><thead><tr><th>ID</th><th>Event</th><th>Location</th><th>Detection</th><th>E->D</th><th>D->N</th><th>N->R</th><th>7-1-7</th><th></th></tr></thead><tbody>${recent.map(ev=>{const m=cm(ev);return`<tr><td class="m">${ev.id}</td><td><strong>${ev.name}</strong></td><td style="font-size:11px;color:var(--tx3)">${ev.prov}${ev.dist?', '+ev.dist:''}</td><td class="m">${ev.detect||'N/A'}</td><td class="m" style="color:${cday(m.d2d,7)}">${m.d2d!==null?m.d2d+'d':'N/A'}</td><td class="m" style="color:${cday(m.d2n,1)}">${m.d2n!==null?m.d2n+'d':'N/A'}</td><td class="m" style="color:${cday(m.n2r,7)}">${m.n2r!==null?m.n2r+'d':'N/A'}</td><td>${badge717(m)}</td><td><button class="btn sm" onclick="editEvt(${ev.id})">Edit</button></td></tr>`}).join('')}</tbody></table>`;
 }
 
 
@@ -1164,7 +1164,7 @@ function submitForm(){
   else{obj.id=evts.length?Math.max(...evts.map(e=>e.id))+1:1;evts.push(obj)}
   sv();upCount();
   syncToServer(obj, null);
-  const msg=document.getElementById('save-msg');msg.textContent=editId?'✓ Event updated.':'✓ Event saved.';
+  const msg=document.getElementById('save-msg');msg.textContent=editId?'OK Event updated.':'OK Event saved.';
   setTimeout(()=>msg.textContent='',3000);
   editId=null;document.getElementById('entry-h').textContent='New outbreak event';
 }
@@ -1172,7 +1172,7 @@ function clearForm(){document.querySelectorAll('#pg-entry input,#pg-entry select
 function editEvt(id){
   const ev=evts.find(e=>e.id===id);if(!ev)return;
   editId=id;Object.entries(FM).forEach(([k,fid])=>{const el=document.getElementById(fid);if(el)el.value=ev[k]||''});
-  document.getElementById('entry-h').textContent='Editing #'+id+' — '+ev.name;
+  document.getElementById('entry-h').textContent='Editing #'+id+' -- '+ev.name;
   // Restore province/district dropdowns
   setProvDist(ev.prov, ev.dist);
   // Populate auto-display fields
@@ -1244,7 +1244,7 @@ function liveCalc(){
 ════════════════════════════════════════════════════════════════ */
 function showActModal(){
   const bg=document.createElement('div');bg.className='modal-bg';bg.id='act-modal';
-  bg.innerHTML=`<div class="modal"><div class="modal-header"><div class="modal-title">Add remedial action</div><button class="modal-close" onclick="closeActModal()">✕</button></div><div class="fgrid"><div class="fg full"><label>Proposed action *</label><input id="am-action" placeholder="e.g. IDSR training…"></div><div class="fg full"><label>Bottleneck addressed</label><input id="am-bneck"></div><div class="fg"><label>Event ID</label><input type="number" id="am-eid" placeholder="1"></div><div class="fg"><label>Responsible authority</label><input id="am-resp"></div><div class="fg"><label>Target start</label><input type="date" id="am-start"></div><div class="fg"><label>Target end</label><input type="date" id="am-end"></div><div class="fg"><label>Status</label><select id="am-status"><option>Not started</option><option>In progress</option><option>Completed</option><option>Delayed</option></select></div><div class="fg full"><label>Next steps</label><input id="am-next"></div></div><div style="display:flex;gap:8px;margin-top:14px"><button class="btn p" onclick="saveAct()">Save</button><button class="btn" onclick="closeActModal()">Cancel</button></div></div>`;
+  bg.innerHTML=`<div class="modal"><div class="modal-header"><div class="modal-title">Add remedial action</div><button class="modal-close" onclick="closeActModal()">x</button></div><div class="fgrid"><div class="fg full"><label>Proposed action *</label><input id="am-action" placeholder="e.g. IDSR training..."></div><div class="fg full"><label>Bottleneck addressed</label><input id="am-bneck"></div><div class="fg"><label>Event ID</label><input type="number" id="am-eid" placeholder="1"></div><div class="fg"><label>Responsible authority</label><input id="am-resp"></div><div class="fg"><label>Target start</label><input type="date" id="am-start"></div><div class="fg"><label>Target end</label><input type="date" id="am-end"></div><div class="fg"><label>Status</label><select id="am-status"><option>Not started</option><option>In progress</option><option>Completed</option><option>Delayed</option></select></div><div class="fg full"><label>Next steps</label><input id="am-next"></div></div><div style="display:flex;gap:8px;margin-top:14px"><button class="btn p" onclick="saveAct()">Save</button><button class="btn" onclick="closeActModal()">Cancel</button></div></div>`;
   document.body.appendChild(bg);
   bg.addEventListener('click',e=>{if(e.target===bg)closeActModal()});
 }
@@ -1278,7 +1278,7 @@ function dlCSV(){const h=['id','name','type','prov','dist','city','emerge','dete
 function dropXL(e){e.preventDefault();document.getElementById('upzone').classList.remove('drag');const f=e.dataTransfer.files[0];if(f)procXL(f)}
 function readXL(inp){if(inp.files[0])procXL(inp.files[0])}
 function procXL(file){
-  document.getElementById('xl-msg').textContent='Reading file…';
+  document.getElementById('xl-msg').textContent='Reading file...';
   const rdr=new FileReader();
   rdr.onload=function(e){
     try{
@@ -1287,8 +1287,8 @@ function procXL(file){
       const data=XLSX.utils.sheet_to_json(ws,{header:1,raw:false,dateNF:'YYYY-MM-DD'}),imp=[];
       for(let r=3;r<data.length;r++){const row=data[r];if(!row||!row[1])continue;imp.push({id:row[0]||imp.length+1,name:fmt(row[1]),type:fmt(row[2]),prov:fmt(row[3]),dist:fmt(row[4]),city:fmt(row[5]),emerge:fmt(row[6]),emergeN:fmt(row[7]),detect:fmt(row[8]),detectN:fmt(row[9]),db1:fmt(row[10]),db2:fmt(row[11]),db3:fmt(row[12]),den:fmt(row[13]),notify:fmt(row[14]),notifyN:fmt(row[15]),nb1:fmt(row[16]),nb2:fmt(row[17]),nb3:fmt(row[18]),nen:fmt(row[19]),ra1:fmt(row[20]),ra2:fmt(row[21]),ra3:fmt(row[22]),ra4:fmt(row[23]),ra5:fmt(row[24]),ra6:fmt(row[25]),ra7:fmt(row[26]),rn:fmt(row[29]),rb1:fmt(row[30]),rb2:fmt(row[31]),rb3:fmt(row[32]),ren:fmt(row[33]),end:fmt(row[34]),notes:fmt(row[35]),earDate:fmt(row[36])})}
       window._xlImp=imp;
-      document.getElementById('xl-msg').innerHTML=`<span style="color:var(--green);font-weight:700">✓ ${imp.length} event(s) found.</span> <button class="btn sm p" onclick="doImport()" style="margin-left:8px">Import all →</button>`;
-      document.getElementById('xl-prev').innerHTML=`<div style="font-size:11px;color:var(--tx3);margin-bottom:7px">Preview — first 3 rows:</div><table class="tbl"><thead><tr><th>ID</th><th>Event</th><th>Province</th><th>District</th><th>Detection</th><th>E→D</th><th>D→N</th></tr></thead><tbody>${imp.slice(0,3).map(ev=>{const m=cm(ev);return`<tr><td class="m">${ev.id}</td><td>${ev.name}</td><td>${ev.prov}</td><td>${ev.dist||'N/A'}</td><td class="m">${ev.detect||'N/A'}</td><td class="m">${m.d2d!==null?m.d2d+'d':'N/A'}</td><td class="m">${m.d2n!==null?m.d2n+'d':'N/A'}</td></tr>`}).join('')}</tbody></table>`;
+      document.getElementById('xl-msg').innerHTML=`<span style="color:var(--green);font-weight:700">OK ${imp.length} event(s) found.</span> <button class="btn sm p" onclick="doImport()" style="margin-left:8px">Import all -></button>`;
+      document.getElementById('xl-prev').innerHTML=`<div style="font-size:11px;color:var(--tx3);margin-bottom:7px">Preview -- first 3 rows:</div><table class="tbl"><thead><tr><th>ID</th><th>Event</th><th>Province</th><th>District</th><th>Detection</th><th>E->D</th><th>D->N</th></tr></thead><tbody>${imp.slice(0,3).map(ev=>{const m=cm(ev);return`<tr><td class="m">${ev.id}</td><td>${ev.name}</td><td>${ev.prov}</td><td>${ev.dist||'N/A'}</td><td class="m">${ev.detect||'N/A'}</td><td class="m">${m.d2d!==null?m.d2d+'d':'N/A'}</td><td class="m">${m.d2n!==null?m.d2n+'d':'N/A'}</td></tr>`}).join('')}</tbody></table>`;
     }catch(err){document.getElementById('xl-msg').innerHTML='<span style="color:var(--coral);font-weight:700">Error:</span> '+err.message}
   };rdr.readAsArrayBuffer(file);
 }
@@ -1344,14 +1344,14 @@ async function syncAllToServer(){
 }
 
 /* ════════════════════════════════════════════════════════════════
-   LOGO — served from znphi-logo.jpg in repo root (no upload needed)
+   LOGO -- served from znphi-logo.jpg in repo root (no upload needed)
 ════════════════════════════════════════════════════════════════ */
 // Logo loads automatically via src="znphi-logo.jpg" in the HTML.
 // onerror fallback shows the green SVG mark if the file is missing.
 
 
 /* ════════════════════════════════════════════════════════════════
-   API SYNC — server
+   API SYNC -- server
 ════════════════════════════════════════════════════════════════ */
 function getApiUrl(){ return (localStorage.getItem('znphi_api_url')||'').replace(/\/$/,''); }
 function getApiKey(){ return localStorage.getItem('znphi_api_key')||''; }
@@ -1390,15 +1390,15 @@ async function testConn(){
   const st=document.getElementById('api-status');
   if(!st) return;
   if(!url){ st.innerHTML='<span style="color:var(--coral)">Enter API URL first.</span>'; return; }
-  st.innerHTML='Testing…';
+  st.innerHTML='Testing...';
   try{
     const r=await fetch(url+'/',{signal:AbortSignal.timeout(7000)});
     const j=await r.json();
     st.innerHTML=j.status==='ok'
-      ?'<span style="color:var(--green);font-weight:600">✓ Connected — '+j.service+'</span>'
+      ?'<span style="color:var(--green);font-weight:600">OK Connected -- '+j.service+'</span>'
       :'<span style="color:var(--coral)">Unexpected response.</span>';
   }catch(e){
-    st.innerHTML='<span style="color:var(--coral)">✗ Cannot reach API: '+e.message+'</span>';
+    st.innerHTML='<span style="color:var(--coral)">x Cannot reach API: '+e.message+'</span>';
   }
 }
 
@@ -1422,11 +1422,11 @@ async function syncToServer(event, action){
         signal:AbortSignal.timeout(8000)
       });
     }
-    setBadge('✓ Synced','pill-green');
+    setBadge('OK Synced','pill-green');
     setTimeout(()=>updateSyncPill(), 3000);
   }catch(e){
-    setBadge('⚠ Offline','pill-amber');
-    console.warn('Sync failed — saved locally:',e.message);
+    setBadge('! Offline','pill-amber');
+    console.warn('Sync failed -- saved locally:',e.message);
   }
 }
 
@@ -1434,13 +1434,13 @@ async function pullFromServer(){
   const url=getApiUrl(), key=getApiKey();
   const st=document.getElementById('api-status');
   if(!url||!key){ if(st) st.innerHTML='<span style="color:var(--coral)">API URL and Admin key required.</span>'; return; }
-  if(st) st.innerHTML='Pulling from server…';
+  if(st) st.innerHTML='Pulling from server...';
   try{
     const [er,ar]=await Promise.all([
       fetch(url+'/api/events', {headers:{'x-admin-key':key},signal:AbortSignal.timeout(12000)}),
       fetch(url+'/api/actions',{headers:{'x-admin-key':key},signal:AbortSignal.timeout(12000)})
     ]);
-    if(er.status===401){ if(st) st.innerHTML='<span style="color:var(--coral)">✗ Wrong admin key.</span>'; return; }
+    if(er.status===401){ if(st) st.innerHTML='<span style="color:var(--coral)">x Wrong admin key.</span>'; return; }
     const ed=await er.json(), ad=await ar.json();
     ed.events.forEach(se=>{
       const idx=evts.findIndex(e=>String(e.id)===String(se.client_id)||String(e.id)===String(se.id));
@@ -1453,11 +1453,11 @@ async function pullFromServer(){
       if(idx>=0) acts[idx]=merged; else acts.push(merged);
     });
     sv(); upCount();
-    if(st) st.innerHTML='<span style="color:var(--green);font-weight:600">✓ Pulled '+ed.count+' events and '+ad.count+' actions.</span>';
+    if(st) st.innerHTML='<span style="color:var(--green);font-weight:600">OK Pulled '+ed.count+' events and '+ad.count+' actions.</span>';
     const active=document.querySelector('.pg.on');
     if(active){const pid=active.id.replace('pg-','');({dash:renderDash,events:renderTbl,bneck:renderBneck,actions:renderActs,live:renderLive})[pid]?.()}
   }catch(e){
-    if(st) st.innerHTML='<span style="color:var(--coral)">✗ Pull failed: '+e.message+'</span>';
+    if(st) st.innerHTML='<span style="color:var(--coral)">x Pull failed: '+e.message+'</span>';
   }
 }
 
