@@ -79,6 +79,13 @@ input,select,textarea{font-family:inherit}
 .logo-mark svg{width:20px;height:20px;fill:white}
 .logo-title{font-family:'Poppins',sans-serif;font-size:15px;font-weight:700;color:var(--green-deep);line-height:1.15}
 .logo-sub{font-size:10px;color:var(--tx3);font-weight:500;letter-spacing:.3px;margin-top:1px}
+.hide-mobile{display:block}
+@media(max-width:540px){.hide-mobile{display:none}
+.logo-title{font-size:13px}
+.hdr{height:52px;padding:0 12px;gap:8px}
+.nav{padding:0 10px}
+.nt{padding:10px 10px;font-size:11px}
+}
 .hdr-sp{flex:1}
 .pill{display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:600;padding:4px 10px;border-radius:20px;white-space:nowrap;letter-spacing:.1px}
 .pill-green{background:var(--green-lite);color:var(--green-deep);border:1px solid #b6e0b8}
@@ -179,11 +186,11 @@ input,select,textarea{font-family:inherit}
 
 /* ── Map ───────────────────────────────────────────── */
 .map-wrap{position:relative;width:100%;height:290px;background:linear-gradient(148deg,var(--green-lite),var(--steel-lite));border-radius:var(--r);overflow:hidden;border:1.5px solid var(--border)}
-.mdot{position:absolute;border-radius:50%;background:var(--green);border:2.5px solid white;cursor:pointer;transform:translate(-50%,-50%);transition:transform .15s,box-shadow .15s;box-shadow:0 2px 6px rgba(59,176,66,.3)}
+
 .mdot:hover{transform:translate(-50%,-50%) scale(1.5);box-shadow:0 0 0 6px rgba(59,176,66,.18)}
-.mtt{position:absolute;background:var(--white);border:1.5px solid var(--border2);border-radius:var(--r);padding:8px 11px;font-size:11px;z-index:10;pointer-events:none;min-width:120px;display:none;box-shadow:var(--sh-md)}
+
 .mtt strong{display:block;margin-bottom:2px;font-family:'Poppins',sans-serif;color:var(--green-deep)}
-.map-lbl{position:absolute;font-size:9px;font-weight:700;color:var(--green-dark);white-space:nowrap;transform:translateX(-50%);pointer-events:none;letter-spacing:.2px}
+
 
 /* ── Bottleneck list ───────────────────────────────── */
 .brow{display:flex;align-items:flex-start;gap:11px;padding:9px 0;border-bottom:1px solid var(--border)}
@@ -296,7 +303,7 @@ input,select,textarea{font-family:inherit}
     <div style="width:48px;height:48px;display:flex;align-items:center;justify-content:center;flex-shrink:0"><img src="znphi-logo.jpg" alt="ZNPHI" style="height:46px;width:auto;object-fit:contain;border-radius:7px" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'" onload="this.style.display='block';this.nextElementSibling.style.display='none'"><div style="display:none;flex-direction:column;align-items:center;justify-content:center;width:100%;height:100%"><span style="font-family:Poppins,sans-serif;font-weight:800;font-size:11px;color:white;line-height:1">ZN</span><span style="font-family:Poppins,sans-serif;font-weight:700;font-size:8px;color:#9FE1CB;line-height:1;margin-top:1px">PHI</span></div></div><div style="width:1px;height:28px;background:#D6E8D8;margin:0 2px"></div><div style="width:52px;height:52px;flex-shrink:0"><img src="717-Alliance-logo.svg" alt="7-1-7 Alliance" style="width:100%;height:100%;object-fit:contain" onerror="this.style.opacity='0.3'"></div>
     <div>
       <div class="logo-title">ZNPHI · 7-1-7 Tracker</div>
-      <div class="logo-sub">Outbreak Timeliness Reporting System</div>
+      <div class="logo-sub hide-mobile">Outbreak Timeliness Reporting System</div>
     </div>
   </div>
   <div class="hdr-sp"></div>
@@ -326,7 +333,48 @@ input,select,textarea{font-family:inherit}
   <div class="g2">
     <div class="card"><div class="ct"><div class="ct-dot" style="background:var(--green)"></div>7-1-7 interval averages</div><div id="d-bars"></div></div>
     <div class="card"><div class="ct"><div class="ct-dot" style="background:var(--steel)"></div>Events by district — Zambia</div>
-      <div class="map-wrap"><div id="map-dots"></div><div class="mtt" id="mtt"></div></div>
+      <div class="map-wrap" style="height:300px;overflow:hidden;padding:0;background:transparent;border:1.5px solid var(--border)"><svg id="zambia-svg" viewBox="0 0 400 300" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:100%;display:block">
+  <rect width="400" height="300" fill="#EDF4F7" rx="8"/>
+  <!-- Western -->
+  <path d="M 28,68 L 72,60 L 88,72 L 92,100 L 96,128 L 88,158 L 80,178 L 68,200 L 52,218 L 40,230 L 28,240 L 20,220 L 18,195 L 22,168 L 20,140 L 22,112 L 24,88 Z" fill="#c8e6c9" stroke="white" stroke-width="1.2" class="prov-shape"/>
+  <!-- North-Western -->
+  <path d="M 72,60 L 120,48 L 148,52 L 158,68 L 160,92 L 148,108 L 132,116 L 108,120 L 92,128 L 88,100 Z" fill="#a5d6a7" stroke="white" stroke-width="1.2" class="prov-shape"/>
+  <!-- Copperbelt -->
+  <path d="M 148,52 L 180,44 L 200,48 L 208,60 L 204,76 L 192,84 L 176,88 L 160,92 L 158,68 Z" fill="#81c784" stroke="white" stroke-width="1.2" class="prov-shape"/>
+  <!-- Luapula -->
+  <path d="M 180,44 L 200,48 L 208,60 L 204,76 L 204,100 L 188,108 L 172,104 L 164,92 L 160,92 L 176,88 L 192,84 Z" fill="#66bb6a" stroke="white" stroke-width="1.2" class="prov-shape"/>
+  <!-- Northern -->
+  <path d="M 200,48 L 248,36 L 278,40 L 288,56 L 284,80 L 268,96 L 244,104 L 220,108 L 204,100 L 204,76 L 208,60 Z" fill="#4caf50" stroke="white" stroke-width="1.2" class="prov-shape"/>
+  <!-- Muchinga -->
+  <path d="M 248,36 L 298,28 L 324,36 L 328,56 L 316,76 L 296,88 L 278,92 L 268,96 L 284,80 L 288,56 L 278,40 Z" fill="#43a047" stroke="white" stroke-width="1.2" class="prov-shape"/>
+  <!-- Central -->
+  <path d="M 132,116 L 160,108 L 188,108 L 204,100 L 220,108 L 228,128 L 224,152 L 208,164 L 188,168 L 168,164 L 148,156 L 132,144 L 120,132 Z" fill="#388e3c" stroke="white" stroke-width="1.2" class="prov-shape"/>
+  <!-- Eastern -->
+  <path d="M 268,96 L 296,88 L 328,100 L 348,112 L 364,132 L 368,156 L 356,172 L 336,180 L 312,176 L 292,168 L 276,156 L 264,140 L 260,120 L 244,104 L 268,96 Z" fill="#2e7d32" stroke="white" stroke-width="1.2" class="prov-shape"/>
+  <!-- Lusaka -->
+  <path d="M 208,164 L 224,152 L 244,156 L 248,172 L 240,184 L 224,188 L 208,184 L 204,172 Z" fill="#1b5e20" stroke="white" stroke-width="1.2" class="prov-shape"/>
+  <!-- Southern -->
+  <path d="M 120,132 L 132,144 L 148,156 L 168,164 L 188,168 L 208,164 L 204,172 L 208,184 L 224,188 L 240,184 L 248,172 L 264,172 L 276,192 L 268,216 L 248,232 L 220,244 L 192,252 L 164,256 L 136,248 L 112,236 L 96,220 L 80,200 L 80,178 L 88,158 L 96,128 L 108,120 Z" fill="#33691e" stroke="white" stroke-width="1.2" class="prov-shape"/>
+  <!-- Province labels -->
+  <text x="38" y="158" font-family="Poppins,Arial,sans-serif" font-size="7.5" font-weight="700" fill="#1b5e20" text-anchor="middle">Western</text>
+  <text x="108" y="82" font-family="Poppins,Arial,sans-serif" font-size="7" font-weight="700" fill="#1b5e20" text-anchor="middle">North-Wes.</text>
+  <text x="174" y="68" font-family="Poppins,Arial,sans-serif" font-size="6.5" font-weight="700" fill="#1b5e20" text-anchor="middle">Copper</text>
+  <text x="174" y="77" font-family="Poppins,Arial,sans-serif" font-size="6.5" font-weight="700" fill="#1b5e20" text-anchor="middle">belt</text>
+  <text x="188" y="90" font-family="Poppins,Arial,sans-serif" font-size="6.5" font-weight="700" fill="#1b5e20" text-anchor="middle">Luapula</text>
+  <text x="244" y="74" font-family="Poppins,Arial,sans-serif" font-size="7.5" font-weight="700" fill="white" text-anchor="middle">Northern</text>
+  <text x="292" y="55" font-family="Poppins,Arial,sans-serif" font-size="7.5" font-weight="700" fill="white" text-anchor="middle">Muchinga</text>
+  <text x="178" y="140" font-family="Poppins,Arial,sans-serif" font-size="8" font-weight="700" fill="white" text-anchor="middle">Central</text>
+  <text x="318" y="138" font-family="Poppins,Arial,sans-serif" font-size="8" font-weight="700" fill="white" text-anchor="middle">Eastern</text>
+  <text x="226" y="178" font-family="Poppins,Arial,sans-serif" font-size="6.5" font-weight="700" fill="white" text-anchor="middle">Lusaka</text>
+  <text x="180" y="208" font-family="Poppins,Arial,sans-serif" font-size="8.5" font-weight="700" fill="white" text-anchor="middle">Southern</text>
+  <!-- Dots and tooltip rendered by JS -->
+  <g id="map-dots"></g>
+  <g id="map-tooltip" style="display:none">
+    <rect id="tt-bg" x="0" y="0" width="110" height="36" rx="5" fill="white" stroke="#D6E8D8" stroke-width="1.2"/>
+    <text id="tt-title" x="7" y="14" font-family="Poppins,Arial,sans-serif" font-size="9" font-weight="700" fill="#203632"></text>
+    <text id="tt-sub" x="7" y="27" font-family="Arial,sans-serif" font-size="8" fill="#698A6E"></text>
+  </g>
+</svg></div>
     </div>
   </div>
   <div class="card"><div class="ct">Recent events</div><div class="tbl-wrap" id="d-recent"></div></div>
@@ -888,19 +936,61 @@ function renderDash(){
    MAP
 ════════════════════════════════════════════════════════════════ */
 const DP={Sinazongwe:{t:71,l:44},Lusaka:{t:56,l:53},Livingstone:{t:83,l:50},Kitwe:{t:34,l:47},Ndola:{t:31,l:50},Chipata:{t:46,l:76},Solwezi:{t:27,l:22},Kasama:{t:21,l:59},Kabwe:{t:48,l:51},Mongu:{t:51,l:24},Chingola:{t:33,l:44},Mazabuka:{t:63,l:50},Kafue:{t:60,l:51},Petauke:{t:48,l:72},Mansa:{t:28,l:52},Choma:{t:68,l:46},Sesheke:{t:74,l:27},Serenje:{t:40,l:57},Mkushi:{t:43,l:54}};
+const PROV_XY={"Western":[38,150],"North-Western":[110,82],"Copperbelt":[174,66],"Luapula":[188,82],"Northern":[244,70],"Muchinga":[294,58],"Central":[178,136],"Eastern":[316,136],"Lusaka":[226,172],"Southern":[180,200]};
+const DIST_PROV={"Kalabo":"Western","Kaoma":"Western","Limulunga":"Western","Lukulu":"Western","Mitete":"Western","Mongu":"Western","Mulobezi":"Western","Mwandi":"Western","Nkeyema":"Western","Senanga":"Western","Sesheke":"Western","Shangombo":"Western","Chavuma":"North-Western","Ikelenge":"North-Western","Kabompo":"North-Western","Kasempa":"North-Western","Manyinga":"North-Western","Mufumbwe":"North-Western","Mushindamo":"North-Western","Mwinilunga":"North-Western","Solwezi":"North-Western","Zambezi":"North-Western","Chililabombwe":"Copperbelt","Chingola":"Copperbelt","Kalulushi":"Copperbelt","Kitwe":"Copperbelt","Luanshya":"Copperbelt","Lufwanyama":"Copperbelt","Masaiti":"Copperbelt","Mpongwe":"Copperbelt","Mufulira":"Copperbelt","Ndola":"Copperbelt","Chembe":"Luapula","Chienge":"Luapula","Chiengi":"Luapula","Kawambwa":"Luapula","Lunga":"Luapula","Mansa":"Luapula","Milenge":"Luapula","Mwense":"Luapula","Nchelenge":"Luapula","Samfya":"Luapula","Chilubi":"Northern","Kaputa":"Northern","Kasama":"Northern","Luwingu":"Northern","Mbala":"Northern","Mporokoso":"Northern","Mpulungu":"Northern","Mungwi":"Northern","Nsama":"Northern","Chama":"Muchinga","Chinsali":"Muchinga","Isoka":"Muchinga","Kanchibiya":"Muchinga","Mafinga":"Muchinga","Mpika":"Muchinga","Nakonde":"Muchinga","Chibombo":"Central","Chitambo":"Central","Kabwe":"Central","Kapiri Mposhi":"Central","Mkushi":"Central","Mumbwa":"Central","Ngabwe":"Central","Serenje":"Central","Shibuyunji":"Central","Chadiza":"Eastern","Chipangali":"Eastern","Chipata":"Eastern","Kasenengwa":"Eastern","Katete":"Eastern","Lundazi":"Eastern","Lumezi":"Eastern","Lusangazi":"Eastern","Mambwe":"Eastern","Msanzala":"Eastern","Nyimba":"Eastern","Petauke":"Eastern","Sinda":"Eastern","Vubwi":"Eastern","Chilanga":"Lusaka","Chirundu":"Lusaka","Chongwe":"Lusaka","Kafue":"Lusaka","Luangwa":"Lusaka","Lusaka":"Lusaka","Rufunsa":"Lusaka","Chikankata":"Southern","Choma":"Southern","Gwembe":"Southern","Itezhi-Tezhi":"Southern","Kalomo":"Southern","Kazungula":"Southern","Livingstone":"Southern","Mazabuka":"Southern","Monze":"Southern","Namwala":"Southern","Pemba":"Southern","Siavonga":"Southern","Sinazeze":"Southern","Sinazongwe":"Southern","Zimba":"Southern"};
 function renderMap(){
-  const g={};evts.forEach(e=>{const k=e.dist||e.prov||'Unknown';g[k]=(g[k]||0)+1});
-  let h='<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;opacity:.06;font-size:80px;font-weight:900;color:var(--green-deep);user-select:none;pointer-events:none;font-family:Poppins,sans-serif">ZM</div>';
-  Object.entries(g).forEach(([d,c])=>{
-    const pos=DP[d]||{t:35+Math.random()*30,l:25+Math.random()*50};
-    const sz=Math.min(10+c*6,28);
-    h+=`<div class="mdot" style="top:${pos.t}%;left:${pos.l}%;width:${sz}px;height:${sz}px" onmouseenter="showTT(event,'${d}',${c})" onmouseleave="hideTT()"></div>`;
-    h+=`<div class="map-lbl" style="top:calc(${pos.t}% - ${sz/2+14}px);left:${pos.l}%">${d}</div>`;
+  var g={};
+  evts.forEach(function(e){
+    var prov=DIST_PROV[e.dist]||e.prov||null;
+    if(!prov) return;
+    // Normalise province name
+    if(prov==='North Western'||prov==='NorthWestern') prov='North-Western';
+    g[prov]=(g[prov]||0)+1;
   });
-  document.getElementById('map-dots').innerHTML=h;
+  var dotsEl=document.getElementById('map-dots');
+  if(!dotsEl) return;
+  while(dotsEl.firstChild) dotsEl.removeChild(dotsEl.firstChild);
+  Object.entries(g).forEach(function(entry){
+    var prov=entry[0], count=entry[1];
+    var xy=PROV_XY[prov]; if(!xy) return;
+    var x=xy[0], y=xy[1];
+    var r=Math.min(7+count*4,18);
+    var ns='http://www.w3.org/2000/svg';
+    var glow=document.createElementNS(ns,'circle');
+    glow.setAttribute('cx',x);glow.setAttribute('cy',y);glow.setAttribute('r',r+5);
+    glow.setAttribute('fill','rgba(59,176,66,0.2)');
+    dotsEl.appendChild(glow);
+    var dot=document.createElementNS(ns,'circle');
+    dot.setAttribute('cx',x);dot.setAttribute('cy',y);dot.setAttribute('r',r);
+    dot.setAttribute('fill','#E53E27');dot.setAttribute('stroke','white');dot.setAttribute('stroke-width','2');
+    dot.style.cursor='pointer';
+    var lbl=document.createElementNS(ns,'text');
+    lbl.setAttribute('x',x);lbl.setAttribute('y',y+3);lbl.setAttribute('text-anchor','middle');
+    lbl.setAttribute('font-family','Poppins,sans-serif');lbl.setAttribute('font-size','8');
+    lbl.setAttribute('font-weight','700');lbl.setAttribute('fill','white');
+    lbl.setAttribute('pointer-events','none');lbl.textContent=count;
+    dot.addEventListener('mouseenter',function(){
+      var tt=document.getElementById('map-tooltip');
+      var ttt=document.getElementById('tt-title');
+      var tts=document.getElementById('tt-sub');
+      if(!tt) return;
+      ttt.textContent=prov;
+      tts.textContent=count+' event'+(count>1?'s':'');
+      var tx=x+r+6, ty=Math.max(0,y-20);
+      if(tx>280) tx=x-r-120;
+      tt.setAttribute('transform','translate('+tx+','+ty+')');
+      tt.style.display='block';
+    });
+    dot.addEventListener('mouseleave',function(){
+      var tt=document.getElementById('map-tooltip');
+      if(tt) tt.style.display='none';
+    });
+    dotsEl.appendChild(dot);
+    dotsEl.appendChild(lbl);
+  });
 }
-function showTT(e,d,c){const t=document.getElementById('mtt');t.innerHTML=`<strong>${d}</strong>${c} event${c>1?'s':''}<br><small style="color:var(--tx3)">Click to filter</small>`;t.style.display='block';t.style.top=(e.offsetY+14)+'px';t.style.left=Math.min(e.offsetX+14,180)+'px'}
-function hideTT(){document.getElementById('mtt').style.display='none'}
+
+
 
 /* ════════════════════════════════════════════════════════════════
    LIVE CHARTS
