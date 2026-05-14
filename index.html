@@ -287,10 +287,7 @@ input,select,textarea{font-family:inherit}
     <button class="login-btn" onclick="doLogin()">Sign in</button>
     <div class="login-err" id="ln-err"></div>
 
-    <div class="login-hint" id="ln-hint">
-      <strong>Admin:</strong> Full dashboard access — overview, charts, all events, bottlenecks, actions, and import.<br>
-      <strong>User:</strong> Enter and edit outbreak events only.
-    </div>
+    
   </div>
 </div>
 
@@ -356,6 +353,12 @@ input,select,textarea{font-family:inherit}
     <text id="tt-sub"   x="8" y="28" font-family="Arial,sans-serif" font-size="8.5" fill="#698A6E"></text>
   </g>
 </svg></div></div>
+  </div>
+  <div class="card" style="padding:10px 14px;margin-bottom:14px">
+    <div style="font-size:11px;font-weight:600;color:var(--tx3);cursor:pointer;display:flex;justify-content:space-between;align-items:center" onclick="toggleMapDebug()">
+      Map diagnostics <span id="map-debug-toggle" style="font-size:10px">show</span>
+    </div>
+    <div id="map-debug" style="display:none;margin-top:8px;font-size:11px;color:var(--tx2);line-height:1.9" ></div>
   </div>
   <div class="card"><div class="ct">Recent events</div><div class="tbl-wrap" id="d-recent"></div></div>
 </main>
@@ -631,30 +634,39 @@ input,select,textarea{font-family:inherit}
     </div>
   </div>
 
-  <!-- API connection card — single, clean -->
+  <!-- API connection card — collapsed by default, expand to configure -->
   <div class="card" style="border-left:4px solid #9E86DC;margin-bottom:14px">
-    <div class="ct" style="color:#3C3489"><div class="ct-dot" style="background:#9E86DC"></div>Step 1 — Server API connection</div>
-    <div style="font-size:12px;color:var(--tx2);line-height:1.8;margin-bottom:14px">
-      Enter your server API URL below. Events are automatically synced to the server each time they are saved.
-      Admins can pull all events submitted by users using the button below.
-    </div>
-    <div class="fgrid" style="margin-bottom:12px">
-      <div class="fg full">
-        <label>API base URL</label>
-        <input id="api-url" placeholder="https://your-server-url.up.railway.app" oninput="saveApiCfg()">
+    <div style="display:flex;align-items:center;justify-content:space-between;cursor:pointer" onclick="toggleApiCard()">
+      <div class="ct" style="color:#3C3489;margin-bottom:0">
+        <div class="ct-dot" style="background:#9E86DC"></div>Step 1 -- Server API connection
       </div>
-      <div class="fg full" id="api-key-row">
-        <label>Admin key <span style="font-weight:400;color:var(--tx3)">(Admin only — leave blank if User)</span></label>
-        <input id="api-key" type="password" placeholder="znphi_admin_2026" oninput="saveApiCfg()">
-      </div>
+      <span id="api-card-toggle" style="font-size:11px;font-weight:600;color:#9E86DC;padding:4px 10px;border-radius:6px;border:1px solid #C5C2F5;background:#EEEDFE;white-space:nowrap">Configure</span>
     </div>
-    <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
-      <button class="btn sm p" onclick="testConn()">&#10003; Test connection</button>
-      <button class="btn sm outline-green" id="pull-btn" onclick="pullFromServer()" style="display:none">&#8595; Pull all events from server</button>
+
+    <!-- Collapsed state: just test + pull buttons, no input fields visible -->
+    <div id="api-card-collapsed" style="margin-top:12px;display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+      <button class="btn sm p" onclick="testConn();event.stopPropagation()">v Test connection</button>
+      <button class="btn sm outline-green" id="pull-btn" onclick="pullFromServer();event.stopPropagation()" style="display:none">&#8595; Pull all events from server</button>
       <span id="api-status" style="font-size:12px;margin-left:4px"></span>
     </div>
-  </div>
 
+    <!-- Expanded state: full config fields -->
+    <div id="api-card-expanded" style="display:none;margin-top:14px;border-top:1px solid var(--border);padding-top:14px">
+      <div style="font-size:12px;color:var(--tx2);line-height:1.8;margin-bottom:12px">
+        Enter your server API URL and admin key. Events are automatically synced each time they are saved. Config is saved in your browser.
+      </div>
+      <div class="fgrid" style="margin-bottom:12px">
+        <div class="fg full">
+          <label>API base URL</label>
+          <input id="api-url" placeholder="https://znphi-717-api-production.up.railway.app" oninput="saveApiCfg()">
+        </div>
+        <div class="fg full" id="api-key-row">
+          <label>Admin key <span style="font-weight:400;color:var(--tx3)">(Admin only -- leave blank if User)</span></label>
+          <input id="api-key" type="password" placeholder="Enter admin key" oninput="saveApiCfg()">
+        </div>
+      </div>
+    </div>
+  </div>
 
   <!-- Sync all local events to server -->
   <div class="card" style="border-left:4px solid var(--green);margin-bottom:14px">
@@ -1114,44 +1126,46 @@ const DIST_PROV={"Kalabo":"Western","Kaoma":"Western","Limulunga":"Western","Luk
 function renderMap(){
   var g={};
 
-  // Normalise province name to match PROV_XY keys exactly
   function normProv(p){
-    if(!p) return null;
+    if(!p||p==='undefined'||p==='null') return null;
     p=p.trim();
-    // Common variations
     var map={
-      'north western':'North-Western',
-      'northwestern':'North-Western',
-      'north-western':'North-Western',
-      'north western province':'North-Western',
-      'copperbelt province':'Copperbelt',
-      'copperbelt':'Copperbelt',
-      'central province':'Central',
-      'central':'Central',
-      'eastern province':'Eastern',
-      'eastern':'Eastern',
-      'luapula province':'Luapula',
-      'luapula':'Luapula',
-      'lusaka province':'Lusaka',
-      'lusaka':'Lusaka',
-      'muchinga province':'Muchinga',
-      'muchinga':'Muchinga',
-      'northern province':'Northern',
-      'northern':'Northern',
-      'southern province':'Southern',
-      'southern':'Southern',
-      'western province':'Western',
-      'western':'Western'
+      'north western':'North-Western','northwestern':'North-Western',
+      'north-western':'North-Western','north western province':'North-Western',
+      'copperbelt province':'Copperbelt','copperbelt':'Copperbelt',
+      'central province':'Central','central':'Central',
+      'eastern province':'Eastern','eastern':'Eastern',
+      'luapula province':'Luapula','luapula':'Luapula',
+      'lusaka province':'Lusaka','lusaka':'Lusaka',
+      'muchinga province':'Muchinga','muchinga':'Muchinga',
+      'northern province':'Northern','northern':'Northern',
+      'southern province':'Southern','southern':'Southern',
+      'western province':'Western','western':'Western'
     };
     return map[p.toLowerCase()]||p;
   }
 
   evts.forEach(function(e){
-    // Try district lookup first, then fall back to province field
-    var prov=DIST_PROV[e.dist]||normProv(e.prov)||null;
+    // Try district lookup first
+    var prov=null;
+    if(e.dist&&e.dist!=='undefined'&&e.dist!==''){
+      prov=DIST_PROV[e.dist]||null;
+    }
+    // Fall back to province field
+    if(!prov){
+      prov=normProv(e.prov||e['prov']||null);
+    }
     if(!prov) return;
     prov=normProv(prov);
-    if(!PROV_XY[prov]) return; // skip if province not in map
+    if(!PROV_XY[prov]){
+      // Try partial match — e.g. "Southern" inside "Southern Province"
+      var provKeys=Object.keys(PROV_XY);
+      var match=provKeys.find(function(k){
+        return prov.toLowerCase().indexOf(k.toLowerCase())>=0 ||
+               k.toLowerCase().indexOf(prov.toLowerCase())>=0;
+      });
+      if(match) prov=match; else return;
+    }
     g[prov]=(g[prov]||0)+1;
   });
 
@@ -1206,7 +1220,7 @@ function renderMap(){
     dotsEl.appendChild(lbl);
   });
 
-  // Add province name tooltip on shape hover
+  // Shape hover — show province name + count on any province shape
   var shapes=document.querySelectorAll(".prov-shape");
   shapes.forEach(function(path){
     var provName=path.getAttribute("data-prov");
@@ -1217,14 +1231,12 @@ function renderMap(){
       var tts=document.getElementById("tt-sub");
       if(!tt) return;
       ttt.textContent=provName;
-      var cnt=g[normProv(provName)]||0;
+      var cnt=g[provName]||0;
       tts.textContent=cnt>0?cnt+" event"+(cnt>1?"s":""):"No events recorded";
-      // Position tooltip near mouse within SVG viewBox
       var svg=document.getElementById("zambia-svg");
       var rect=svg.getBoundingClientRect();
-      var vbW=500, vbH=420;
-      var mx=(e.clientX-rect.left)/rect.width*vbW;
-      var my=(e.clientY-rect.top)/rect.height*vbH;
+      var mx=(e.clientX-rect.left)/rect.width*500;
+      var my=(e.clientY-rect.top)/rect.height*420;
       var tx=mx+12; var ty=Math.max(4,my-20);
       if(tx>370) tx=mx-130;
       tt.setAttribute("transform","translate("+tx+","+ty+")");
@@ -1833,6 +1845,49 @@ async function checkServerDuplicate(ev){
     return found||null;
   }catch(e){
     return null; // server unreachable — don't block
+  }
+}
+
+
+function toggleMapDebug(){
+  var el=document.getElementById("map-debug");
+  var tog=document.getElementById("map-debug-toggle");
+  if(!el) return;
+  if(el.style.display==="none"){
+    el.style.display="block";
+    if(tog) tog.textContent="hide";
+    updateMapDebug();
+  } else {
+    el.style.display="none";
+    if(tog) tog.textContent="show";
+  }
+}
+
+function updateMapDebug(){
+  var el=document.getElementById("map-debug");
+  if(!el||el.style.display==="none") return;
+  var provCounts={};
+  evts.forEach(function(e){
+    var key=(e.prov||"(empty)")+" | dist: "+(e.dist||"(empty)");
+    provCounts[key]=(provCounts[key]||0)+1;
+  });
+  var lines=Object.entries(provCounts).map(function(kv){
+    return "<div style='padding:2px 0;border-bottom:1px solid var(--border)'>"+kv[0]+" &rarr; <strong>"+kv[1]+" event(s)</strong></div>";
+  });
+  el.innerHTML=lines.length?lines.join(""):"<em>No events loaded</em>";
+}
+
+
+function toggleApiCard(){
+  var exp=document.getElementById("api-card-expanded");
+  var tog=document.getElementById("api-card-toggle");
+  if(!exp) return;
+  if(exp.style.display==="none"){
+    exp.style.display="block";
+    if(tog) tog.textContent="Collapse";
+  } else {
+    exp.style.display="none";
+    if(tog) tog.textContent="Configure";
   }
 }
 
