@@ -399,6 +399,7 @@ input,select,textarea{font-family:inherit}
     <div><div class="user-banner-title">Data Entry Portal</div><div class="user-banner-sub">Enter outbreak event details below. All fields are saved locally and synced to the server.</div></div>
   </div>
 
+  <div id="date-seq-warning"></div>
   <div class="card">
     <div class="fgrid">
 
@@ -927,22 +928,71 @@ function renderDash(){
 ════════════════════════════════════════════════════════════════ */
 function renderLive(){
   var ms=evts.map(cm);
-  var labels=evts.map(function(e){return e.name+(e.dist?' ('+e.dist+')':'');});
-  function colBar(arr,t){return arr.map(function(v){return v===null?'#C2D8C8':v<=t?'#3BB042':v<=t*2?'#F09A1F':'#E53E27';});}
-  var sc={y:{beginAtZero:true,grid:{color:'rgba(59,176,66,.08)'},ticks:{font:{size:10}}},x:{grid:{display:false},ticks:{font:{size:10},maxRotation:30}}};
-  mkChart('ch-det','bar',{labels:labels,datasets:[{data:ms.map(function(m){return m.d2d;}),backgroundColor:colBar(ms.map(function(m){return m.d2d;}),7),borderWidth:0}]},{scales:sc,plugins:{tooltip:{callbacks:{label:function(c){return c.raw===null?'No data':c.raw+'d (target 7d)';}}}}}); 
-  mkChart('ch-not','bar',{labels:labels,datasets:[{data:ms.map(function(m){return m.d2n;}),backgroundColor:colBar(ms.map(function(m){return m.d2n;}),1),borderWidth:0}]},{scales:sc,plugins:{tooltip:{callbacks:{label:function(c){return c.raw===null?'No data':c.raw+'d (target 1d)';}}}}}); 
-  mkChart('ch-res','bar',{labels:labels,datasets:[{data:ms.map(function(m){return m.n2r;}),backgroundColor:colBar(ms.map(function(m){return m.n2r;}),7),borderWidth:0}]},{scales:sc,plugins:{tooltip:{callbacks:{label:function(c){return c.raw===null?'No data':c.raw+'d (target 7d)';}}}}});
+
+  // Clean labels — no undefined
+  var labels=evts.map(function(e){
+    var loc=e.dist&&e.dist!=='undefined'?e.dist:e.prov&&e.prov!=='undefined'?e.prov:'Unknown';
+    return e.name+' ('+loc+')';
+  });
+
+  // For charts: replace negative or null values with null (hidden bar)
+  // and flag them separately
+  function cleanVal(v){ return (v===null||v<0)?null:v; }
+  function colBar(arr,t){
+    return arr.map(function(v){
+      if(v===null||v<0) return '#D0D0D0'; // grey for invalid/missing
+      return v<=t?'#3BB042':v<=t*2?'#F09A1F':'#E53E27';
+    });
+  }
+
+  var d2dRaw=ms.map(function(m){return m.d2d;});
+  var d2nRaw=ms.map(function(m){return m.d2n;});
+  var n2rRaw=ms.map(function(m){return m.n2r;});
+
+  var d2dClean=d2dRaw.map(cleanVal);
+  var d2nClean=d2nRaw.map(cleanVal);
+  var n2rClean=n2rRaw.map(cleanVal);
+
+  // Count data quality issues
+  var dqIssues=d2dRaw.filter(function(v){return v!==null&&v<0;}).length
+    +d2nRaw.filter(function(v){return v!==null&&v<0;}).length
+    +n2rRaw.filter(function(v){return v!==null&&v<0;}).length;
+
+  // Show data quality warning if issues exist
+  var dqWarn=document.getElementById('dq-warning');
+  if(dqWarn){
+    if(dqIssues>0){
+      dqWarn.innerHTML='<div style="background:var(--amber-lite);border:1px solid #f5d08a;border-radius:8px;padding:10px 14px;font-size:12px;color:#7a4a00;margin-bottom:14px">'
+        +'<strong>Data quality note:</strong> '+dqIssues+' value(s) show negative days, meaning a date was entered out of sequence (e.g. notification before detection). '
+        +'These are shown in grey. Please review and correct the affected events in the Events Table.</div>';
+    } else {
+      dqWarn.innerHTML='';
+    }
+  }
+
+  var sc={
+    y:{beginAtZero:true,min:0,grid:{color:'rgba(59,176,66,.08)'},ticks:{font:{size:10}}},
+    x:{grid:{display:false},ticks:{font:{size:10},maxRotation:35}}
+  };
+  var ttCb7=function(c){return c.raw===null?'No data / date sequence error':c.raw+'d (target 7d)';};
+  var ttCb1=function(c){return c.raw===null?'No data / date sequence error':c.raw+'d (target 1d)';};
+
+  mkChart('ch-det','bar',{labels:labels,datasets:[{data:d2dClean,backgroundColor:colBar(d2dRaw,7),borderWidth:0,label:'Days E to D'}]},{scales:sc,plugins:{legend:{display:false},tooltip:{callbacks:{label:ttCb7}}}});
+  mkChart('ch-not','bar',{labels:labels,datasets:[{data:d2nClean,backgroundColor:colBar(d2nRaw,1),borderWidth:0,label:'Days D to N'}]},{scales:sc,plugins:{legend:{display:false},tooltip:{callbacks:{label:ttCb1}}}});
+  mkChart('ch-res','bar',{labels:labels,datasets:[{data:n2rClean,backgroundColor:colBar(n2rRaw,7),borderWidth:0,label:'Days N to R'}]},{scales:sc,plugins:{legend:{display:false},tooltip:{callbacks:{label:ttCb7}}}});
+
   var full=ms.filter(function(m){return met(m.d2d,7)&&met(m.d2n,1)&&met(m.n2r,7);}).length;
-  var part=ms.filter(function(m){return !(met(m.d2d,7)&&met(m.d2n,1)&&met(m.n2r,7))&&m.d2d!==null;}).length;
-  var inc=ms.filter(function(m){return m.d2d===null;}).length;
-  mkChart('ch-pie','doughnut',{labels:['Full 7-1-7 met','Targets missed','Incomplete data'],datasets:[{data:[full,part,inc],backgroundColor:['#3BB042','#E53E27','#628393'],borderWidth:3,borderColor:'#FFFFFF'}]},{cutout:'64%',plugins:{legend:{display:true,position:'bottom',labels:{boxWidth:12,padding:12,font:{size:11,family:'Inter'}}}}});
+  var part=ms.filter(function(m){return !(met(m.d2d,7)&&met(m.d2n,1)&&met(m.n2r,7))&&m.d2d!==null&&m.d2d>=0;}).length;
+  var inc=ms.filter(function(m){return m.d2d===null||m.d2d<0;}).length;
+  mkChart('ch-pie','doughnut',{labels:['Full 7-1-7 met','Targets missed','Incomplete / error'],datasets:[{data:[full,part,inc],backgroundColor:['#3BB042','#E53E27','#D0D0D0'],borderWidth:3,borderColor:'#FFFFFF'}]},{cutout:'64%',plugins:{legend:{display:true,position:'bottom',labels:{boxWidth:12,padding:12,font:{size:11,family:'Inter'}}}}});
+
   var bn=bnByStage();
-  mkChart('ch-bn','bar',{labels:['Detection','Notification','Response'],datasets:[{data:[bn.det,bn.notif,bn.resp],backgroundColor:['#9E86DC','#9E1E62','#3BB042'],borderWidth:0}]},{scales:{y:{beginAtZero:true,ticks:{stepSize:1,font:{size:10}},grid:{color:'rgba(59,176,66,.08)'}},x:{grid:{display:false}}}});
+  mkChart('ch-bn','bar',{labels:['Detection','Notification','Response'],datasets:[{data:[bn.det,bn.notif,bn.resp],backgroundColor:['#9E86DC','#9E1E62','#3BB042'],borderWidth:0}]},{scales:{y:{beginAtZero:true,ticks:{stepSize:1,font:{size:10}},grid:{color:'rgba(59,176,66,.08)'}},x:{grid:{display:false}}},plugins:{legend:{display:false}}});
+
   var tlEvts=evts.filter(function(e){return e.emerge&&e.end;});
   if(tlEvts.length){
     document.getElementById('ch-tl-wrap').style.height=Math.max(120,tlEvts.length*38+60)+'px';
-    mkChart('ch-tl','bar',{labels:tlEvts.map(function(e){return e.name+(e.dist?' ('+e.dist+')':'');}),datasets:[{data:tlEvts.map(function(e){return Math.round((new Date(e.end)-new Date(e.emerge))/864e5);}),backgroundColor:'#628393',borderWidth:0}]},{indexAxis:'y',scales:{x:{beginAtZero:true,grid:{color:'rgba(59,176,66,.08)'},ticks:{font:{size:10}}},y:{grid:{display:false},ticks:{font:{size:10}}}},plugins:{tooltip:{callbacks:{label:function(c){return c.raw+'d outbreak duration';}}}}});
+    mkChart('ch-tl','bar',{labels:tlEvts.map(function(e){var loc=e.dist&&e.dist!=='undefined'?e.dist:e.prov||'Unknown';return e.name+' ('+loc+')';}),datasets:[{data:tlEvts.map(function(e){return Math.round((new Date(e.end)-new Date(e.emerge))/864e5);}),backgroundColor:'#628393',borderWidth:0,label:'Duration (days)'}]},{indexAxis:'y',scales:{x:{beginAtZero:true,min:0,grid:{color:'rgba(59,176,66,.08)'},ticks:{font:{size:10}}},y:{grid:{display:false},ticks:{font:{size:10}}}},plugins:{legend:{display:false},tooltip:{callbacks:{label:function(c){return c.raw+'d outbreak duration';}}}}});
   }
   renderActChart('ch-act-live');
 }
@@ -1149,24 +1199,103 @@ function renderActChart(id){
 ════════════════════════════════════════════════════════════════ */
 const FM={name:'f-name',type:'f-type',prov:'f-prov',dist:'f-dist',city:'f-city',emerge:'f-emerge',emergeN:'f-emerge-n',detect:'f-detect',detectN:'f-detect-n',db1:'f-db1',db2:'f-db2',db3:'f-db3',den:'f-den',notify:'f-notify',notifyN:'f-notify-n',nb1:'f-nb1',nb2:'f-nb2',nb3:'f-nb3',nen:'f-nen',ra1:'f-ra1',ra2:'f-ra2',ra3:'f-ra3',ra4:'f-ra4',ra5:'f-ra5',ra6:'f-ra6',ra7:'f-ra7',rn:'f-rn',rb1:'f-rb1',rb2:'f-rb2',rb3:'f-rb3',ren:'f-ren',end:'f-end',notes:'f-notes',earDate:'f-ear-date'};
 function submitForm(){
-  const name=document.getElementById('f-name').value.trim(),prov=document.getElementById('f-prov').value.trim();
-  if(!name||!prov){alert('Event name and province are required.');return}
-  const obj={};Object.entries(FM).forEach(([k,fid])=>{const el=document.getElementById(fid);obj[k]=el?el.value.trim():''});
+  var name=document.getElementById('f-name').value.trim();
+  var prov=document.getElementById('f-prov').value.trim();
+  if(!name||!prov){alert('Event name and province are required.');return;}
+
+  // ── Date sequence validation ──────────────────────────────────
+  var emerge  = document.getElementById('f-emerge').value;
+  var detect  = document.getElementById('f-detect').value;
+  var notify  = document.getElementById('f-notify').value;
+  var ra1=document.getElementById('f-ra1').value;
+  var ra2=document.getElementById('f-ra2').value;
+  var ra3=document.getElementById('f-ra3').value;
+  var ra4=document.getElementById('f-ra4').value;
+  var ra5=document.getElementById('f-ra5').value;
+  var ra6=document.getElementById('f-ra6').value;
+  var ra7=document.getElementById('f-ra7').value;
+  var raVals=[ra1,ra2,ra3,ra4,ra5,ra6,ra7].filter(Boolean);
+
+  var errors=[];
+
+  // Rule 1: Detection must be on or after emergence
+  if(emerge&&detect&&new Date(detect)<new Date(emerge)){
+    errors.push('Detection date ('+detect+') is before the emergence date ('+emerge+'). Detection must be on or after emergence.');
+  }
+  // Rule 2: Notification must be on or after detection
+  if(detect&&notify&&new Date(notify)<new Date(detect)){
+    errors.push('Notification date ('+notify+') is before the detection date ('+detect+'). Notification must be on or after detection.');
+  }
+  // Rule 3: Each RA date must be on or after notification
+  if(notify){
+    var raLabels=['RA1','RA2','RA3','RA4','RA5','RA6','RA7'];
+    var raInputs=[ra1,ra2,ra3,ra4,ra5,ra6,ra7];
+    raInputs.forEach(function(d,i){
+      if(d&&new Date(d)<new Date(notify)){
+        errors.push(raLabels[i]+' date ('+d+') is before the notification date ('+notify+'). Response actions must be on or after notification.');
+      }
+    });
+  }
+  // Rule 4: End date must be after emergence
+  var endDate=document.getElementById('f-end').value;
+  if(emerge&&endDate&&new Date(endDate)<new Date(emerge)){
+    errors.push('End date ('+endDate+') is before the emergence date ('+emerge+'). End date must be after emergence.');
+  }
+  // Rule 5: EAR date must be after detection
+  var earDate=document.getElementById('f-ear-date').value;
+  if(detect&&earDate&&new Date(earDate)<new Date(detect)){
+    errors.push('EAR presentation date ('+earDate+') is before the detection date ('+detect+').');
+  }
+
+  if(errors.length>0){
+    // Show errors in the form warning div
+    var warnEl=document.getElementById('date-seq-warning');
+    if(warnEl){
+      warnEl.innerHTML='<div style="background:var(--coral-lite);border:1.5px solid #f5bdb5;border-radius:8px;padding:12px 15px;margin-bottom:14px">'
+        +'<div style="font-size:13px;font-weight:700;color:#7a1a0f;margin-bottom:8px;font-family:Poppins,sans-serif">Cannot save -- please fix the following date errors:</div>'
+        +'<ul style="margin:0;padding-left:18px;font-size:12px;color:#7a1a0f;line-height:1.8">'
+        +errors.map(function(e){return '<li>'+e+'</li>';}).join('')
+        +'</ul></div>';
+      // Scroll to warning
+      warnEl.scrollIntoView({behavior:'smooth',block:'start'});
+    }
+    return; // Block save
+  }
+
+  // Clear any previous warning
+  var warnEl=document.getElementById('date-seq-warning');
+  if(warnEl) warnEl.innerHTML='';
+
+  // ── All good -- save ──────────────────────────────────────────
+  var obj={};
+  Object.entries(FM).forEach(function(entry){
+    var k=entry[0], fid=entry[1];
+    var el=document.getElementById(fid);
+    obj[k]=el?el.value.trim():'';
+  });
   // Save auto-calculated fields
-  const riEl=document.getElementById('f-ri-display');
-  const rcEl=document.getElementById('f-rc-display');
-  const earEl=document.getElementById('f-ear-days');
-  obj.ri=riEl?riEl.value.replace(/ \(.*\)/,'').trim():'';
-  obj.rc=rcEl?rcEl.value.replace(/ \(.*\)/,'').trim():'';
+  var riEl=document.getElementById('f-ri-display');
+  var rcEl=document.getElementById('f-rc-display');
+  var earEl=document.getElementById('f-ear-days');
+  obj.ri=riEl?riEl.value.split(' (')[0].trim():'';
+  obj.rc=rcEl?rcEl.value.split(' (')[0].trim():'';
   obj.earDays=earEl?earEl.value:'';
   obj=calcAutoFields(obj);
-  if(editId){const i=evts.findIndex(e=>e.id===editId);if(i>=0)evts[i]={...evts[i],...obj}}
-  else{obj.id=evts.length?Math.max(...evts.map(e=>e.id))+1:1;evts.push(obj)}
-  sv();upCount();
+
+  if(editId){
+    var i=evts.findIndex(function(e){return e.id===editId;});
+    if(i>=0) evts[i]=Object.assign({},evts[i],obj);
+  } else {
+    obj.id=evts.length?Math.max.apply(null,evts.map(function(e){return e.id;}))+1:1;
+    evts.push(obj);
+  }
+  sv(); upCount();
   syncToServer(obj, null);
-  const msg=document.getElementById('save-msg');msg.textContent=editId?'OK Event updated.':'OK Event saved.';
-  setTimeout(()=>msg.textContent='',3000);
-  editId=null;document.getElementById('entry-h').textContent='New outbreak event';
+  var msg=document.getElementById('save-msg');
+  msg.textContent=editId?'v Event updated.':'v Event saved.';
+  setTimeout(function(){msg.textContent='';},3000);
+  editId=null;
+  document.getElementById('entry-h').textContent='New outbreak event';
 }
 function clearForm(){document.querySelectorAll('#pg-entry input,#pg-entry select,#pg-entry textarea').forEach(el=>el.value='');const distSel=document.getElementById('f-dist');if(distSel){distSel.innerHTML='<option value="">Select province first</option>';}editId=null;document.getElementById('entry-h').textContent='New outbreak event';document.getElementById('live-calc-card').style.display='none'}
 function editEvt(id){
@@ -1203,6 +1332,21 @@ function liveCalc(){
   var emerge=document.getElementById("f-emerge").value;
   var detect=document.getElementById("f-detect").value;
   var notify=document.getElementById("f-notify").value;
+
+  // Date sequence validation
+  var warnEl=document.getElementById("date-seq-warning");
+  var warns=[];
+  if(emerge&&detect&&new Date(detect)<new Date(emerge)) warns.push("Detection date is before emergence date.");
+  if(detect&&notify&&new Date(notify)<new Date(detect)) warns.push("Notification date is before detection date.");
+  var raVals=["f-ra1","f-ra2","f-ra3","f-ra4","f-ra5","f-ra6","f-ra7"].map(function(id){return document.getElementById(id).value;}).filter(Boolean);
+  if(notify&&raVals.length&&raVals.some(function(d){return new Date(d)<new Date(notify);})) warns.push("One or more response action dates are before the notification date.");
+  if(warnEl){
+    if(warns.length){
+      warnEl.innerHTML='<div style="background:var(--coral-lite);border:1px solid #f5bdb5;border-radius:8px;padding:9px 13px;font-size:12px;color:#7a1a0f;margin-bottom:12px"><strong>Date sequence warning:</strong> '+warns.join(" ")+'</div>';
+    } else {
+      warnEl.innerHTML="";
+    }
+  }
   var raIds=["f-ra1","f-ra2","f-ra3","f-ra4","f-ra5","f-ra6","f-ra7"];
   var ras=raIds.map(function(id){return document.getElementById(id).value;}).filter(Boolean).sort();
   var ri=ras[0]||null;
@@ -1301,15 +1445,53 @@ function calcAutoFields(ev){
   return ev;
 }
 
+function validateDateSeq(ev){
+  // Returns array of error strings. Empty = valid.
+  var errs=[];
+  if(ev.emerge&&ev.detect&&new Date(ev.detect)<new Date(ev.emerge))
+    errs.push('Detection before emergence');
+  if(ev.detect&&ev.notify&&new Date(ev.notify)<new Date(ev.detect))
+    errs.push('Notification before detection');
+  var notify=ev.notify;
+  if(notify){
+    ['ra1','ra2','ra3','ra4','ra5','ra6','ra7'].forEach(function(k){
+      if(ev[k]&&new Date(ev[k])<new Date(notify))
+        errs.push(k.toUpperCase()+' before notification');
+    });
+  }
+  if(ev.emerge&&ev.end&&new Date(ev.end)<new Date(ev.emerge))
+    errs.push('End date before emergence');
+  return errs;
+}
+
 function doImport(){
   if(!window._xlImp)return;
+  var imported=0, skipped=0, skippedList=[];
+
   window._xlImp.forEach(function(ev){
     ev=calcAutoFields(ev);
+    var errs=validateDateSeq(ev);
+    if(errs.length>0){
+      skipped++;
+      skippedList.push(ev.name+' ('+errs.join('; ')+')');
+      return; // Skip this event
+    }
     var i=evts.findIndex(function(e){return String(e.id)===String(ev.id);});
     if(i>=0) evts[i]=ev; else evts.push(ev);
+    imported++;
   });
-  sv();upCount();
-  document.getElementById('xl-msg').innerHTML='<span style="color:var(--green);font-weight:700">&#10003; '+window._xlImp.length+' event(s) imported and synced.</span>';
+
+  sv(); upCount();
+
+  var msg='<span style="color:var(--green);font-weight:700">v '+imported+' event(s) imported successfully.</span>';
+  if(skipped>0){
+    msg+='<div style="background:var(--amber-lite);border:1px solid #f5d08a;border-radius:8px;padding:10px 14px;margin-top:10px;font-size:12px;color:#7a4a00">'
+      +'<strong>'+skipped+' event(s) skipped</strong> due to date sequence errors. Please correct these in the original Excel file and re-import:'
+      +'<ul style="margin:6px 0 0 18px;line-height:1.8">'
+      +skippedList.map(function(s){return '<li>'+s+'</li>';}).join('')
+      +'</ul></div>';
+  }
+  document.getElementById('xl-msg').innerHTML=msg;
   document.getElementById('xl-prev').innerHTML='';
   window._xlImp=null;
 }
