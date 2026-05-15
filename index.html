@@ -310,7 +310,7 @@ input,select,textarea{font-family:inherit}
           <select id="rg-title" style="font-size:13px;padding:9px 12px;border:1.5px solid var(--border2);border-radius:var(--r);background:var(--white);color:var(--tx);width:100%;font-family:inherit">
             <option value="">Select title</option>
             <option>Mr</option><option>Ms</option><option>Mrs</option>
-            <option>Dr</option><option>Prof</option><option>Rev</option><option>Other</option>
+            <option>Dr</option><option>Prof</option><option>Other</option>
           </select></div>
         <div class="login-field"><label>First name *</label>
           <input type="text" id="rg-firstname" placeholder="e.g. Jane"></div>
@@ -334,7 +334,7 @@ input,select,textarea{font-family:inherit}
     </div>
     <div id="ln-step2" style="display:none">
       <div style="font-size:13px;color:var(--tx2);text-align:center;margin-bottom:16px">
-        Welcome back, <strong id="ln-welcome-name" style="color:var(--green-deep)"></strong>.
+        Welcome, <strong id="ln-welcome-name" style="color:var(--green-deep)"></strong>.
       </div>
       <div class="login-tabs" style="margin-bottom:16px">
         <button class="lt on" id="ln-role-admin" onclick="selectRole('admin')">Admin</button>
@@ -632,8 +632,8 @@ input,select,textarea{font-family:inherit}
       </div>
       <div class="card"><div class="ct">How to access</div>
         <div style="font-size:12px;color:var(--tx2);line-height:2.1">
-          <div style="display:flex;gap:10px;padding:6px 0;border-bottom:1px solid var(--border)"><span style="font-weight:700;color:var(--green-deep);min-width:110px">Admin login</span><span>Full dashboard access: overview, charts, events, bottlenecks, actions, import</span></div>
-          <div style="display:flex;gap:10px;padding:6px 0;border-bottom:1px solid var(--border)"><span style="font-weight:700;color:var(--green-deep);min-width:110px">User login</span><span>Data entry form only: enter and edit outbreak events</span></div>
+          <div id="info-admin-row" style="display:flex;gap:10px;padding:6px 0;border-bottom:1px solid var(--border)"><span style="font-weight:700;color:var(--green-deep);min-width:110px">Admin login</span><span>Full dashboard access: overview, charts, events, bottlenecks, actions, import</span></div>
+          <div style="display:flex;gap:10px;padding:6px 0;border-bottom:1px solid var(--border)"><span style="font-weight:700;color:var(--green-deep);min-width:110px">User login</span><span>Enter and edit outbreak events using the data entry form</span></div>
           <div style="display:flex;gap:10px;padding:6px 0;border-bottom:1px solid var(--border)"><span style="font-weight:700;color:var(--green-deep);min-width:110px">Device</span><span>Any browser on desktop, laptop, or mobile</span></div>
           <div style="display:flex;gap:10px;padding:6px 0"><span style="font-weight:700;color:var(--green-deep);min-width:110px">Offline</span><span>Data entry works without internet and syncs when connectivity returns</span></div>
         </div>
@@ -699,7 +699,7 @@ function ensureAdmin(){
     users.push({
       id:1, username:'admin', name:'ZNPHI Administrator',
       profession:'System Administrator', facility:'ZNPHI',
-      email:'admin@znphi.co.zm', pwHash:hashPw('znphi@admin2026'),
+      email:'717admin@znphi.co.zm', pwHash:hashPw('znphi@admin2026'),
       role:'admin', active:true, created:new Date().toISOString(), lastLogin:null
     });
     saveUsers(users);
@@ -804,7 +804,7 @@ function doLogin(){
 
 // ── Register new user ─────────────────────────────────────────────
 function doRegister(){
-  var title     = (document.getElementById('rg-title').value||'').trim();
+  var title     = getTitle('rg-title','rg-title-other');
   var firstname = (document.getElementById('rg-firstname').value||'').trim();
   var lastname  = (document.getElementById('rg-lastname').value||'').trim();
   var name      = (title?title+' ':'') + firstname + (lastname?' '+lastname:'');
@@ -843,17 +843,27 @@ function doRegister(){
     created: new Date().toISOString(), lastLogin: null
   };
   users.push(newUser);
-  saveUsers(users);
-  // Push to server
-  var url=getApiUrl();
-  if(url){
-    fetch(url+'/api/users/register',{
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body:JSON.stringify(newUser),
-      signal:AbortSignal.timeout(8000)
-    }).catch(function(e){console.warn('User sync to server failed:',e.message);});
-  }
+  saveUsers(users);  // Saved to this browser immediately
+
+  // Push to server — use configured URL or built-in default
+  var url=getApiUrl()||'https://znphi-717-api.1mandachipo.workers.dev';
+  var errEl=document.getElementById('ln-err');
+  if(errEl) errEl.innerHTML='<span style="color:var(--green);font-size:11px">Account saved. Syncing to server...</span>';
+  fetch(url+'/api/users/register',{
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify(newUser),
+    signal:AbortSignal.timeout(10000)
+  }).then(function(r){
+    if(r.ok){
+      if(errEl) errEl.innerHTML='<span style="color:var(--green);font-size:11px">Account saved and synced to server.</span>';
+    } else {
+      if(errEl) errEl.innerHTML='<span style="color:var(--tx3);font-size:11px">Account saved locally. Server sync will retry later.</span>';
+    }
+  }).catch(function(e){
+    console.warn('User server sync failed:',e.message);
+    if(errEl) errEl.innerHTML='<span style="color:var(--tx3);font-size:11px">Account saved locally. Server sync will retry when online.</span>';
+  });
 
   // Show role selector (user role only for new registrations)
   _pendingUser=newUser;
@@ -941,7 +951,7 @@ function startApp() {
     var parts = currentUser.name.trim().split(' ');
     if(parts.length >= 2){
       // Check if first part is a title
-      var titles = ['Mr','Ms','Mrs','Dr','Prof','Rev','Other'];
+      var titles = ['Mr','Ms','Mrs','Dr','Prof','Other'];
       if(titles.indexOf(parts[0]) >= 0){
         displayName = parts[0] + ' ' + parts[parts.length-1];
       } else {
@@ -967,6 +977,9 @@ function startApp() {
   ld();
   loadApiCfg();
   var _role = currentUser ? currentUser.role : 'user';
+  // Show/hide admin info row in Info page
+  var adminInfoRow=document.getElementById('info-admin-row');
+  if(adminInfoRow) adminInfoRow.style.display = _role==='admin' ? 'flex' : 'none';
   go(_role === 'admin' ? 'dash' : 'entry');
 }
 
@@ -2184,7 +2197,7 @@ function showAddUserModal(){
     +'<div class="modal-header"><div class="modal-title">Add user</div>'
     +'<button class="modal-close" onclick="closeAddUserModal()">x</button></div>'
     +'<div class="fgrid">'
-    +'<div class="fg"><label>Title</label><select id="au-title" style="font-size:12px;padding:7px 10px;border:1.5px solid var(--border2);border-radius:var(--r);width:100%;font-family:inherit"><option value="">Select</option><option>Mr</option><option>Ms</option><option>Mrs</option><option>Dr</option><option>Prof</option></select></div>'+'<div class="fg"><label>First name *</label><input id="au-firstname" placeholder="First name"></div>'+'<div class="fg"><label>Last name *</label><input id="au-lastname" placeholder="Last name"></div>'
+    +'<div class="fg full"><label>Title</label><select id="au-title" style="font-size:12px;padding:7px 10px;border:1.5px solid var(--border2);border-radius:var(--r);width:100%;font-family:inherit" onchange="toggleOtherTitle(\'au-title\',\'au-title-other\')"><option value="">Select</option><option>Mr</option><option>Ms</option><option>Mrs</option><option>Dr</option><option>Prof</option><option value="Other">Other</option></select><input id="au-title-other" type="text" placeholder="Please specify title" style="display:none;margin-top:6px;font-size:12px;padding:7px 10px;border:1.5px solid var(--border2);border-radius:var(--r);width:100%;font-family:inherit"></div>'+'<div class="fg"><label>First name *</label><input id="au-firstname" placeholder="First name"></div>'+'<div class="fg"><label>Last name *</label><input id="au-lastname" placeholder="Last name"></div>'
     +'<div class="fg"><label>Profession *</label><input id="au-profession" placeholder="Profession"></div>'
     +'<div class="fg"><label>Affiliate facility *</label><input id="au-facility" placeholder="Facility"></div>'
     +'<div class="fg"><label>Email *</label><input type="email" id="au-email" placeholder="Email address"></div>'
@@ -2208,7 +2221,7 @@ function closeAddUserModal(){
 }
 
 function saveNewUser(){
-  var auTitle    =(document.getElementById('au-title').value||'').trim();
+  var auTitle    = getTitle('au-title','au-title-other');
   var auFirst    =(document.getElementById('au-firstname').value||'').trim();
   var auLast     =(document.getElementById('au-lastname').value||'').trim();
   var name       =(auTitle?auTitle+' ':'')+auFirst+(auLast?' '+auLast:'');
@@ -2241,15 +2254,18 @@ function saveNewUser(){
   });
   saveUsers(users);
   var newU=users[users.length-1];
-  var url=getApiUrl(), key=getApiKey();
-  if(url){
-    fetch(url+'/api/users/register',{
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body:JSON.stringify(newU),
-      signal:AbortSignal.timeout(8000)
-    }).catch(function(e){console.warn('User server sync failed:',e.message);});
-  }
+  // Push to server immediately
+  var url=getApiUrl()||'https://znphi-717-api.1mandachipo.workers.dev';
+  fetch(url+'/api/users/register',{
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify(newU),
+    signal:AbortSignal.timeout(10000)
+  }).then(function(r){
+    console.log('User synced to server:', r.ok);
+  }).catch(function(e){
+    console.warn('User server sync failed:',e.message);
+  });
   closeAddUserModal();
   renderUsers();
 }
@@ -2299,6 +2315,22 @@ async function pullUsersFromServer(){
   }catch(e){
     if(st) st.innerHTML='<span style="color:var(--coral)">Pull failed: '+e.message+'</span>';
   }
+}
+
+function toggleOtherTitle(selId, inputId){
+  var sel=document.getElementById(selId);
+  var inp=document.getElementById(inputId);
+  if(!sel||!inp) return;
+  inp.style.display = sel.value==='Other' ? 'block' : 'none';
+}
+function getTitle(selId, inputId){
+  var sel=document.getElementById(selId);
+  if(!sel) return '';
+  if(sel.value==='Other'){
+    var inp=document.getElementById(inputId);
+    return inp ? inp.value.trim() : '';
+  }
+  return sel.value;
 }
 /* ════════════════════════════════════════════════════════════════
    INIT
