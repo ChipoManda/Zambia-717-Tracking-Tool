@@ -661,7 +661,7 @@ input,select,textarea{font-family:inherit}
           <input id="api-url" placeholder="https://znphi-717-api-production.up.railway.app" oninput="saveApiCfg()">
         </div>
         <div class="fg full" id="api-key-row">
-          <label>Admin key <span style="font-weight:400;color:var(--tx3)">(Admin only -- leave blank if User)</span></label>
+          <label>Admin key</label>
           <input id="api-key" type="password" placeholder="Enter admin key" oninput="saveApiCfg()">
         </div>
       </div>
@@ -862,7 +862,14 @@ function seed(){
 /* ════════════════════════════════════════════════════════════════
    UTILS
 ════════════════════════════════════════════════════════════════ */
-function dbd(a,b){if(!a||!b)return null;return Math.round((new Date(b)-new Date(a))/864e5)}
+function dbd(a,b){
+  if(!a||!b) return null;
+  // Strip time component if present (ISO 8601 from server)
+  var da=new Date(String(a).split('T')[0]);
+  var db=new Date(String(b).split('T')[0]);
+  if(isNaN(da.getTime())||isNaN(db.getTime())) return null;
+  return Math.round((db-da)/864e5);
+}
 function met(v,t){return v!==null&&v<=t}
 function avg(arr){const v=arr.filter(x=>x!==null);return v.length?Math.round(v.reduce((a,b)=>a+b,0)/v.length):null}
 function fmt(v){if(!v)return '';if(v instanceof Date)return v.toISOString().slice(0,10);const s=String(v).trim();return(s==='NA'||s==='N/A')?'':s}
@@ -1122,46 +1129,92 @@ const PROV_XY={
   "Southern":[196.3,346.1],
   "Western":[110.8,293.1]
 };
-const DIST_PROV={"Kalabo":"Western","Kaoma":"Western","Limulunga":"Western","Lukulu":"Western","Mitete":"Western","Mongu":"Western","Mulobezi":"Western","Mwandi":"Western","Nkeyema":"Western","Senanga":"Western","Sesheke":"Western","Shangombo":"Western","Chavuma":"North-Western","Ikelenge":"North-Western","Kabompo":"North-Western","Kasempa":"North-Western","Manyinga":"North-Western","Mufumbwe":"North-Western","Mushindamo":"North-Western","Mwinilunga":"North-Western","Solwezi":"North-Western","Zambezi":"North-Western","Chililabombwe":"Copperbelt","Chingola":"Copperbelt","Kalulushi":"Copperbelt","Kitwe":"Copperbelt","Luanshya":"Copperbelt","Lufwanyama":"Copperbelt","Masaiti":"Copperbelt","Mpongwe":"Copperbelt","Mufulira":"Copperbelt","Ndola":"Copperbelt","Chembe":"Luapula","Chienge":"Luapula","Chiengi":"Luapula","Kawambwa":"Luapula","Lunga":"Luapula","Mansa":"Luapula","Milenge":"Luapula","Mwense":"Luapula","Nchelenge":"Luapula","Samfya":"Luapula","Chilubi":"Northern","Kaputa":"Northern","Kasama":"Northern","Luwingu":"Northern","Mbala":"Northern","Mporokoso":"Northern","Mpulungu":"Northern","Mungwi":"Northern","Nsama":"Northern","Chama":"Muchinga","Chinsali":"Muchinga","Isoka":"Muchinga","Kanchibiya":"Muchinga","Mafinga":"Muchinga","Mpika":"Muchinga","Nakonde":"Muchinga","Chibombo":"Central","Chitambo":"Central","Kabwe":"Central","Kapiri Mposhi":"Central","Mkushi":"Central","Mumbwa":"Central","Ngabwe":"Central","Serenje":"Central","Shibuyunji":"Central","Chadiza":"Eastern","Chipangali":"Eastern","Chipata":"Eastern","Kasenengwa":"Eastern","Katete":"Eastern","Lundazi":"Eastern","Lumezi":"Eastern","Lusangazi":"Eastern","Mambwe":"Eastern","Msanzala":"Eastern","Nyimba":"Eastern","Petauke":"Eastern","Sinda":"Eastern","Vubwi":"Eastern","Chilanga":"Lusaka","Chirundu":"Lusaka","Chongwe":"Lusaka","Kafue":"Lusaka","Luangwa":"Lusaka","Lusaka":"Lusaka","Rufunsa":"Lusaka","Chikankata":"Southern","Choma":"Southern","Gwembe":"Southern","Itezhi-Tezhi":"Southern","Kalomo":"Southern","Kazungula":"Southern","Livingstone":"Southern","Mazabuka":"Southern","Monze":"Southern","Namwala":"Southern","Pemba":"Southern","Siavonga":"Southern","Sinazeze":"Southern","Sinazongwe":"Southern","Zimba":"Southern"};
+const DIST_PROV={
+  // Central
+  "Chibombo":"Central","Chitambo":"Central","Kabwe":"Central",
+  "Kapiri Mposhi":"Central","Kapiri-Mposhi":"Central","Mkushi":"Central",
+  "Mumbwa":"Central","Ngabwe":"Central","Serenje":"Central","Shibuyunji":"Central",
+  // Copperbelt
+  "Chililabombwe":"Copperbelt","Chingola":"Copperbelt","Kalulushi":"Copperbelt",
+  "Kitwe":"Copperbelt","Luanshya":"Copperbelt","Lufwanyama":"Copperbelt",
+  "Masaiti":"Copperbelt","Mpongwe":"Copperbelt","Mufulira":"Copperbelt","Ndola":"Copperbelt",
+  // Eastern
+  "Chadiza":"Eastern","Chama":"Eastern","Chama (Eastern)":"Eastern",
+  "Chipangali":"Eastern","Chipata":"Eastern","Kasenengwa":"Eastern",
+  "Katete":"Eastern","Lundazi":"Eastern","Lumezi":"Eastern","Lusangazi":"Eastern",
+  "Mambwe":"Eastern","Milenge":"Eastern","Msanzala":"Eastern",
+  "Nyimba":"Eastern","Petauke":"Eastern","Sinda":"Eastern","Vubwi":"Eastern",
+  // Luapula
+  "Chembe":"Luapula","Chienge":"Luapula","Chiengi":"Luapula","Kawambwa":"Luapula",
+  "Lunga":"Luapula","Mansa":"Luapula","Mwense":"Luapula",
+  "Nchelenge":"Luapula","Samfya":"Luapula",
+  // Lusaka
+  "Chilanga":"Lusaka","Chirundu":"Lusaka","Chongwe":"Lusaka","Kafue":"Lusaka",
+  "Luangwa":"Lusaka","Lusaka":"Lusaka","Rufunsa":"Lusaka","Shibuyunji (Lusaka)":"Lusaka",
+  // Muchinga
+  "Chinsali":"Muchinga","Isoka":"Muchinga","Kanchibiya":"Muchinga",
+  "Lavushi Manda":"Muchinga","Mafinga":"Muchinga","Mpika":"Muchinga",
+  "Nakonde":"Muchinga","Shiwang'andu":"Muchinga","Shiwa Ngandu":"Muchinga",
+  // North-Western
+  "Chavuma":"North-Western","Ikelenge":"North-Western","Kabompo":"North-Western",
+  "Kasempa":"North-Western","Manyinga":"North-Western","Mufumbwe":"North-Western",
+  "Mushindamo":"North-Western","Mwinilunga":"North-Western",
+  "Solwezi":"North-Western","Zambezi":"North-Western",
+  // Northern
+  "Chilubi":"Northern","Kaputa":"Northern","Kasama":"Northern","Luwingu":"Northern",
+  "Mbala":"Northern","Mporokoso":"Northern","Mpulungu":"Northern",
+  "Mungwi":"Northern","Nsama":"Northern",
+  // Southern
+  "Chikankata":"Southern","Choma":"Southern","Gwembe":"Southern",
+  "Itezhi-Tezhi":"Southern","Itezhi Tezhi":"Southern","Kalomo":"Southern",
+  "Kazungula":"Southern","Livingstone":"Southern","Mazabuka":"Southern",
+  "Monze":"Southern","Namwala":"Southern","Pemba":"Southern",
+  "Siavonga":"Southern","Sinazeze":"Southern","Sinazongwe":"Southern","Zimba":"Southern",
+  // Western
+  "Kalabo":"Western","Kaoma":"Western","Limulunga":"Western","Lukulu":"Western",
+  "Mitete":"Western","Mongu":"Western","Mulobezi":"Western","Mwandi":"Western",
+  "Nkeyema":"Western","Senanga":"Western","Sesheke":"Western","Shangombo":"Western",
+  // Province names themselves (when stored in dist column)
+  "Central":"Central","Copperbelt":"Copperbelt","Eastern":"Eastern",
+  "Luapula":"Luapula","Lusaka":"Lusaka","Muchinga":"Muchinga",
+  "North-Western":"North-Western","North Western":"North-Western",
+  "Northern":"Northern","Southern":"Southern","Western":"Western"
+};
 function renderMap(){
   var g={};
 
-  function normProv(p){
-    if(!p||p==='undefined'||p==='null') return null;
-    p=p.trim();
-    var map={
-      'north western':'North-Western','northwestern':'North-Western',
-      'north-western':'North-Western','north western province':'North-Western',
-      'copperbelt province':'Copperbelt','copperbelt':'Copperbelt',
-      'central province':'Central','central':'Central',
-      'eastern province':'Eastern','eastern':'Eastern',
-      'luapula province':'Luapula','luapula':'Luapula',
-      'lusaka province':'Lusaka','lusaka':'Lusaka',
-      'muchinga province':'Muchinga','muchinga':'Muchinga',
-      'northern province':'Northern','northern':'Northern',
-      'southern province':'Southern','southern':'Southern',
-      'western province':'Western','western':'Western'
-    };
-    return map[p.toLowerCase()]||p;
-  }
+  var normProv=normProvGlobal;
 
   evts.forEach(function(e){
-    // Try district lookup first
     var prov=null;
-    if(e.dist&&e.dist!=='undefined'&&e.dist!==''){
-      prov=DIST_PROV[e.dist]||null;
+    var distRaw=(e.dist||'').trim();
+    var provRaw=(e.prov||'').trim();
+
+    // Priority 1: look up district in DIST_PROV table
+    if(distRaw && distRaw!=='undefined'){
+      prov=DIST_PROV[distRaw]||null;
     }
-    // Fall back to province field
-    if(!prov){
-      prov=normProv(e.prov||e['prov']||null);
+
+    // Priority 2: district not found — try normProv on district value
+    // (handles cases where district column actually contains province name)
+    if(!prov && distRaw){
+      var norm=normProv(distRaw);
+      if(norm && PROV_XY[norm]) prov=norm;
     }
+
+    // Priority 3: fall back to province field (skip "Zambia")
+    if(!prov && provRaw && provRaw.toLowerCase()!=='zambia' && provRaw.toLowerCase()!=='undefined'){
+      prov=normProv(provRaw)||null;
+    }
+
     if(!prov) return;
     prov=normProv(prov);
+
+    // Partial match fallback
     if(!PROV_XY[prov]){
-      // Try partial match — e.g. "Southern" inside "Southern Province"
-      var provKeys=Object.keys(PROV_XY);
-      var match=provKeys.find(function(k){
-        return prov.toLowerCase().indexOf(k.toLowerCase())>=0 ||
+      var keys=Object.keys(PROV_XY);
+      var match=keys.find(function(k){
+        return prov.toLowerCase().indexOf(k.toLowerCase())>=0||
                k.toLowerCase().indexOf(prov.toLowerCase())>=0;
       });
       if(match) prov=match; else return;
@@ -1365,6 +1418,7 @@ function forceSave(){
 }
 
 function doSave(obj){
+  if(obj.prov) obj.prov=normProvGlobal(obj.prov);
   if(editId){
     var i=evts.findIndex(function(e){return e.id===editId;});
     if(i>=0) evts[i]=Object.assign({},evts[i],obj);
@@ -1555,6 +1609,9 @@ function doImport(){
 
   window._xlImp.forEach(function(ev){
     ev=calcAutoFields(ev);
+    // Normalise province
+    if(ev.prov) ev.prov=normProvGlobal(ev.prov);
+    if(ev.dist) ev.dist=ev.dist.trim();
 
     // 1. Date sequence check — skip if errors
     var dateErrs=validateDateSeq(ev);
@@ -1741,8 +1798,12 @@ async function pullFromServer(){
     if(er.status===401){ if(st) st.innerHTML='<span style="color:var(--coral)">x Wrong admin key.</span>'; return; }
     const ed=await er.json(), ad=await ar.json();
     ed.events.forEach(se=>{
+      // Normalise province field from server to match PROV_XY keys
+      if(se.prov) se.prov=normProvGlobal(se.prov);
+      // Recalculate auto fields
+      se=calcAutoFields(se);
       const idx=evts.findIndex(e=>String(e.id)===String(se.client_id)||String(e.id)===String(se.id));
-      const merged={...se, id:se.client_id||se.id};
+      const merged=Object.assign({},se,{id:se.client_id||se.id});
       if(idx>=0) evts[idx]=merged; else evts.push(merged);
     });
     ad.actions.forEach(sa=>{
@@ -1800,6 +1861,30 @@ function setProvDist(prov, dist){
   }
 }
 
+
+
+/* ════════════════════════════════════════════════════════════════
+   PROVINCE NORMALISATION (global)
+════════════════════════════════════════════════════════════════ */
+function normProvGlobal(p){
+  if(!p||p==='undefined'||p==='null'||p===''||p.toLowerCase()==='zambia') return '';
+  p=p.trim();
+  var map={
+    'north western':'North-Western','northwestern':'North-Western',
+    'north-western':'North-Western','north western province':'North-Western',
+    'n-western':'North-Western','n western':'North-Western',
+    'copperbelt province':'Copperbelt','copperbelt':'Copperbelt',
+    'central province':'Central','central':'Central',
+    'eastern province':'Eastern','eastern':'Eastern',
+    'luapula province':'Luapula','luapula':'Luapula',
+    'lusaka province':'Lusaka','lusaka':'Lusaka',
+    'muchinga province':'Muchinga','muchinga':'Muchinga',
+    'northern province':'Northern','northern':'Northern',
+    'southern province':'Southern','southern':'Southern',
+    'western province':'Western','western':'Western'
+  };
+  return map[p.toLowerCase()]||p;
+}
 
 /* ════════════════════════════════════════════════════════════════
    DUPLICATE DETECTION
@@ -1868,7 +1953,10 @@ function updateMapDebug(){
   if(!el||el.style.display==="none") return;
   var provCounts={};
   evts.forEach(function(e){
-    var key=(e.prov||"(empty)")+" | dist: "+(e.dist||"(empty)");
+    var distRaw=(e.dist||'(empty)').trim();
+    var provRaw=(e.prov||'(empty)').trim();
+    var resolved=DIST_PROV[distRaw]||normProvGlobal(distRaw)||normProvGlobal(provRaw)||'(unresolved)';
+    var key='dist:'+distRaw+' | prov:'+provRaw+' => '+resolved;
     provCounts[key]=(provCounts[key]||0)+1;
   });
   var lines=Object.entries(provCounts).map(function(kv){
