@@ -550,7 +550,12 @@ input,select,textarea{font-family:inherit}
 <!-- ══ USERS ══════════════════════════════════════════════════════ -->
 <main class="pg" id="pg-users">
   <div class="ph"><div><div class="ptitle">User management</div><div class="psub">All registered accounts</div></div>
-    <button class="btn sm p" onclick="showAddUserModal()">+ Add user</button></div>
+    <div class="btns">
+      <button class="btn sm outline-green" onclick="pullUsersFromServer()">Pull users from server</button>
+      <button class="btn sm p" onclick="showAddUserModal()">+ Add user</button>
+    </div>
+  </div>
+  <div id="users-server-status" style="font-size:12px;margin-bottom:10px"></div>
   <div class="card tbl-wrap">
     <table class="tbl" id="users-tbl"><thead><tr>
       <th>ID</th><th>Name</th><th>Username</th><th>Profession</th>
@@ -839,6 +844,16 @@ function doRegister(){
   };
   users.push(newUser);
   saveUsers(users);
+  // Push to server
+  var url=getApiUrl();
+  if(url){
+    fetch(url+'/api/users/register',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify(newUser),
+      signal:AbortSignal.timeout(8000)
+    }).catch(function(e){console.warn('User sync to server failed:',e.message);});
+  }
 
   // Show role selector (user role only for new registrations)
   _pendingUser=newUser;
@@ -920,12 +935,27 @@ function startApp() {
   // Role pill and user name
   const rp = document.getElementById('role-pill');
   var roleName = currentUser ? currentUser.role : currentRole;
-  var displayName = currentUser ? currentUser.name.split(' ')[0] : '';
+  // Build display: title (if any) + last name only
+  var displayName = '';
+  if(currentUser && currentUser.name){
+    var parts = currentUser.name.trim().split(' ');
+    if(parts.length >= 2){
+      // Check if first part is a title
+      var titles = ['Mr','Ms','Mrs','Dr','Prof','Rev','Other'];
+      if(titles.indexOf(parts[0]) >= 0){
+        displayName = parts[0] + ' ' + parts[parts.length-1];
+      } else {
+        displayName = parts[parts.length-1];
+      }
+    } else {
+      displayName = currentUser.name;
+    }
+  }
   if (roleName === 'admin') {
-    rp.textContent = displayName ? displayName + ' (Admin)' : 'Admin';
+    rp.textContent = displayName || 'Admin';
     rp.className = 'pill pill-role pill-admin';
   } else {
-    rp.textContent = displayName ? displayName + ' (User)' : 'User';
+    rp.textContent = displayName || 'User';
     rp.className = 'pill pill-role pill-user';
   }
 
@@ -2210,10 +2240,66 @@ function saveNewUser(){
     role:role, active:true, created:new Date().toISOString(), lastLogin:null
   });
   saveUsers(users);
+  var newU=users[users.length-1];
+  var url=getApiUrl(), key=getApiKey();
+  if(url){
+    fetch(url+'/api/users/register',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify(newU),
+      signal:AbortSignal.timeout(8000)
+    }).catch(function(e){console.warn('User server sync failed:',e.message);});
+  }
   closeAddUserModal();
   renderUsers();
 }
 
+
+async function pullUsersFromServer(){
+  var url=getApiUrl(), key=getApiKey();
+  var st=document.getElementById('users-server-status');
+  if(!url||!key){
+    if(st) st.innerHTML='<span style="color:var(--coral)">API URL and admin key required. Configure in Import data tab.</span>';
+    return;
+  }
+  if(st) st.innerHTML='Pulling users from server...';
+  try{
+    var r=await fetch(url+'/api/users',{
+      headers:{'x-admin-key':key},
+      signal:AbortSignal.timeout(10000)
+    });
+    if(r.status===401){if(st) st.innerHTML='<span style="color:var(--coral)">Wrong admin key.</span>';return;}
+    var data=await r.json();
+    var localUsers=loadUsers();
+    var merged=0, added=0;
+    data.users.forEach(function(su){
+      var existing=localUsers.find(function(u){
+        return u.username.toLowerCase()===su.username.toLowerCase();
+      });
+      if(existing){
+        // Update role and active from server
+        existing.role=su.role;
+        existing.active=su.active;
+        merged++;
+      } else {
+        localUsers.push({
+          id: localUsers.length?Math.max.apply(null,localUsers.map(function(u){return u.id;}))+1:1,
+          username: su.username, name: su.name||'', profession: su.profession||'',
+          facility: su.facility||'', email: su.email||'',
+          pwHash: su.pw_hash||'', role: su.role||'user',
+          active: su.active!==false, created: su.created_at||new Date().toISOString(),
+          lastLogin: su.last_login||null
+        });
+        added++;
+      }
+    });
+    saveUsers(localUsers);
+    if(st) st.innerHTML='<span style="color:var(--green);font-weight:600">OK Pulled '+data.count+' users from server ('+added+' new, '+merged+' updated).</span>';
+    renderUsers();
+  }catch(e){
+    if(st) st.innerHTML='<span style="color:var(--coral)">Pull failed: '+e.message+'</span>';
+  }
+}
 /* ════════════════════════════════════════════════════════════════
    INIT
 ════════════════════════════════════════════════════════════════ */
